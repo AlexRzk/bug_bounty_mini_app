@@ -34,4 +34,3 @@ build/
 *.log
 *.bak
 out/
-lib/
