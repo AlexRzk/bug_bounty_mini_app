@@ -27,6 +27,14 @@ $ forge build
 $ forge test
 ```
 
+You can also run from the repository root by pointing Foundry at the `contracts` folder:
+
+```shell
+$ forge test -C contracts
+```
+
+Note: We ignore vendor library test suites (OpenZeppelin’s internal tests/harnesses) via the root `foundry.toml` `ignored_paths` so only our project tests are compiled. Remappings are configured at the root to resolve `@openzeppelin/` and `forge-std/` imports when running from the repo root.
+
 ### Format
 
 ```shell

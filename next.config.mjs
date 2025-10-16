@@ -1,10 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Dev indicators are now controlled by devIndicators: false
+  devIndicators: false,  // Completely disable the build indicator (bottom-left logo)
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
+  },
+  experimental: {
+    // Use webpack build worker for faster compilation
+    webpackBuildWorker: true,
   },
   images: {
     unoptimized: true,

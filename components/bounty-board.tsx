@@ -1,86 +1,101 @@
 "use client"
 
 import { useState } from "react"
+import { useReadContract } from "wagmi"
+import { formatEther } from "viem"
 import { BountyCard } from "@/components/bounty-card"
 import { BountyFilters } from "@/components/bounty-filters"
 import { SubmitBountyDialog } from "@/components/submit-bounty-dialog"
-
-// Mock data for demonstration
-const mockBounties = [
-  {
-    id: "1",
-    title: "Critical Smart Contract Vulnerability",
-    description:
-      "Find and report critical vulnerabilities in our DeFi protocol smart contracts deployed on Base testnet.",
-    reward: "5.0 ETH",
-    severity: "critical",
-    status: "open",
-    submittedBy: "defi-protocol.eth",
-    deadline: "2025-02-15",
-    responses: 3,
-  },
-  {
-    id: "2",
-    title: "Frontend XSS Vulnerability",
-    description: "Identify cross-site scripting vulnerabilities in our web application interface.",
-    reward: "1.5 ETH",
-    severity: "high",
-    status: "open",
-    submittedBy: "web3-app.eth",
-    deadline: "2025-02-10",
-    responses: 7,
-  },
-  {
-    id: "3",
-    title: "API Authentication Bypass",
-    description: "Test our API endpoints for authentication and authorization vulnerabilities.",
-    reward: "2.0 ETH",
-    severity: "high",
-    status: "open",
-    submittedBy: "api-team.eth",
-    deadline: "2025-02-20",
-    responses: 2,
-  },
-  {
-    id: "4",
-    title: "Gas Optimization Opportunities",
-    description: "Suggest gas optimization improvements for our NFT minting contract.",
-    reward: "0.5 ETH",
-    severity: "low",
-    status: "open",
-    submittedBy: "nft-project.eth",
-    deadline: "2025-02-25",
-    responses: 12,
-  },
-  {
-    id: "5",
-    title: "Reentrancy Attack Vector",
-    description: "Identify potential reentrancy vulnerabilities in our staking contract.",
-    reward: "3.0 ETH",
-    severity: "critical",
-    status: "in-progress",
-    submittedBy: "staking-dao.eth",
-    deadline: "2025-02-12",
-    responses: 5,
-  },
-  {
-    id: "6",
-    title: "Oracle Manipulation Risk",
-    description: "Test our price oracle integration for manipulation vulnerabilities.",
-    reward: "2.5 ETH",
-    severity: "high",
-    status: "open",
-    submittedBy: "oracle-protocol.eth",
-    deadline: "2025-02-18",
-    responses: 1,
-  },
-]
+import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"
 
 export function BountyBoard() {
   const [filter, setFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("reward")
 
-  const filteredBounties = mockBounties.filter((bounty) => {
+  // Read the total number of bounties from the contract
+  const { data: nextBountyId, isLoading } = useReadContract({
+    ...BOUNTY_MANAGER_CONTRACT,
+    functionName: "nextBountyId",
+  })
+
+  // Read individual bounties (for now, read up to first 10)
+  const maxBounties = nextBountyId ? Math.min(Number(nextBountyId) - 1, 50) : 0
+  
+  const bounty1 = useReadContract({
+    ...BOUNTY_MANAGER_CONTRACT,
+    functionName: "getBounty",
+    args: [1n],
+    query: { enabled: maxBounties >= 1 },
+  })
+  const bounty2 = useReadContract({
+    ...BOUNTY_MANAGER_CONTRACT,
+    functionName: "getBounty",
+    args: [2n],
+    query: { enabled: maxBounties >= 2 },
+  })
+  const bounty3 = useReadContract({
+    ...BOUNTY_MANAGER_CONTRACT,
+    functionName: "getBounty",
+    args: [3n],
+    query: { enabled: maxBounties >= 3 },
+  })
+  const bounty4 = useReadContract({
+    ...BOUNTY_MANAGER_CONTRACT,
+    functionName: "getBounty",
+    args: [4n],
+    query: { enabled: maxBounties >= 4 },
+  })
+  const bounty5 = useReadContract({
+    ...BOUNTY_MANAGER_CONTRACT,
+    functionName: "getBounty",
+    args: [5n],
+    query: { enabled: maxBounties >= 5 },
+  })
+
+  // Transform contract data to UI format
+  const bountyData = [bounty1, bounty2, bounty3, bounty4, bounty5]
+  
+  const bounties = bountyData
+    .map((query, index) => {
+      if (!query.data) return null
+      
+      const [creator, title, description, reward, paymentType, tokenAddress, status, winner, deadline, farcasterCastHash] = query.data as readonly [
+        `0x${string}`,
+        string,
+        string,
+        bigint,
+        number,
+        `0x${string}`,
+        number,
+        `0x${string}`,
+        bigint,
+        string
+      ]
+      
+      // Skip cancelled bounties (status === 2)
+      if (Number(status) === 2) return null
+      
+      // Map contract status enum to UI status
+      const statusMap: Record<number, string> = {
+        0: "open",        // Active
+        1: "in-progress", // Completed (has winner)
+      }
+      
+      return {
+        id: (index + 1).toString(),
+        title: title || "Untitled Bounty",
+        description: description || "No description",
+        reward: `${formatEther(reward)} ${paymentType === 0 ? 'ETH' : 'ERC20'}`,
+        severity: "high", // You can add severity logic based on reward size
+        status: statusMap[Number(status)] || "open",
+        submittedBy: creator?.slice(0, 6) + "..." + creator?.slice(-4),
+        deadline: new Date(Number(deadline) * 1000).toISOString().split('T')[0],
+        responses: 0, // You can fetch this via getBountySubmissions if needed
+      }
+    })
+    .filter((bounty): bounty is NonNullable<typeof bounty> => bounty !== null)
+
+  const filteredBounties = bounties.filter((bounty) => {
     if (filter === "all") return true
     if (filter === "critical") return bounty.severity === "critical"
     if (filter === "high") return bounty.severity === "high"
@@ -94,7 +109,7 @@ export function BountyBoard() {
         <div>
           <h2 className="text-balance text-3xl font-bold tracking-tight text-foreground">Active Bug Bounties</h2>
           <p className="text-pretty text-muted-foreground mt-1">
-            Discover security vulnerabilities and earn rewards on Base testnet
+            Discover security vulnerabilities and earn rewards on Base Sepolia
           </p>
         </div>
         <SubmitBountyDialog />
@@ -102,11 +117,24 @@ export function BountyBoard() {
 
       <BountyFilters currentFilter={filter} onFilterChange={setFilter} currentSort={sortBy} onSortChange={setSortBy} />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredBounties.map((bounty) => (
-          <BountyCard key={bounty.id} bounty={bounty} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Loading bounties from blockchain...</p>
+        </div>
+      ) : filteredBounties.length === 0 ? (
+        <div className="text-center py-12 border border-dashed rounded-lg">
+          <p className="text-muted-foreground mb-2">No bounties found on-chain yet.</p>
+          <p className="text-sm text-muted-foreground">
+            Be the first to create a bounty! Total bounties: {nextBountyId ? Number(nextBountyId) - 1 : 0}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredBounties.map((bounty) => bounty && (
+            <BountyCard key={bounty.id} bounty={bounty} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

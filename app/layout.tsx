@@ -10,8 +10,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
 
 export const metadata: Metadata = {
-  title: "Bug Bounty Board - Farcaster",
-  description: "Discover and submit bug bounties on Base testnet",
+  title: "BountyBuggy - Secure Bug Bounty Platform",
+  description: "Discover and submit bug bounties. Secure, fast, and rewarding blockchain-based bug bounty platform.",
   generator: "v0.app",
 }
 

@@ -58,7 +58,7 @@ contract BountyManager is Ownable, ReentrancyGuard, Pausable {
 
     uint256 public nextBountyId = 1;
     uint256 public nextSubmissionId = 1;
-    uint256 public platformFeePercent = 250; // 2.5% in basis points (250/10000)
+    uint256 public platformFeePercent = 500; // 5% in basis points (500/10000)
     address public feeCollector;
 
     mapping(uint256 => Bounty) public bounties;

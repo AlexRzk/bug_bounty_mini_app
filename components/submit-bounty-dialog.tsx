@@ -1,9 +1,9 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import { useAccount } from "wagmi"
+import React, { useState } from "react"
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from "wagmi"
+import { parseEther } from "viem"
+import { baseSepolia } from "wagmi/chains"
 import {
   Dialog,
   DialogContent,
@@ -19,19 +19,58 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"
+import "@/components/glowing-button.css"
 
 export function SubmitBountyDialog() {
-  const { isConnected } = useAccount()
+  const { isConnected, chain } = useAccount()
   const { toast } = useToast()
+  const { writeContract, data: hash, error, isPending } = useWriteContract()
+  const { switchChain } = useSwitchChain()
   const [open, setOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     reward: "",
     severity: "",
     deadline: "",
+    farcasterCastHash: "",
   })
+
+  // Wait for transaction confirmation
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  })
+
+  // Close dialog and reset form after successful submission
+  React.useEffect(() => {
+    if (isSuccess) {
+      toast({
+        title: "Bounty created!",
+        description: "Your bug bounty has been posted on-chain.",
+      })
+      setOpen(false)
+      setFormData({
+        title: "",
+        description: "",
+        reward: "",
+        severity: "",
+        deadline: "",
+        farcasterCastHash: "",
+      })
+    }
+  }, [isSuccess, toast])
+
+  // Show error toast
+  React.useEffect(() => {
+    if (error) {
+      toast({
+        title: "Creation failed",
+        description: error.message || "Failed to create bounty. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }, [error, toast])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,34 +84,78 @@ export function SubmitBountyDialog() {
       return
     }
 
-    setIsSubmitting(true)
+    // Check if on the correct chain
+    if (chain?.id !== baseSepolia.id) {
+      toast({
+        title: "Wrong network",
+        description: "Switching to Base Sepolia...",
+      })
+      
+      try {
+        await switchChain?.({ chainId: baseSepolia.id })
+      } catch (err) {
+        toast({
+          title: "Network switch failed",
+          description: "Please manually switch to Base Sepolia in your wallet.",
+          variant: "destructive",
+        })
+        return
+      }
+    }
 
-    // Simulate submission delay
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    if (!formData.title.trim() || !formData.description.trim() || !formData.reward) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      })
+      return
+    }
 
-    toast({
-      title: "Bounty submitted!",
-      description: "Your bug bounty has been posted to the board.",
-    })
+    // Calculate deadline timestamp.
+    // The UI uses a date input (YYYY-MM-DD). Set deadline to end-of-day local time.
+    let deadlineTimestamp: bigint
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+    if (dateRegex.test(formData.deadline)) {
+      const [year, month, day] = formData.deadline.split('-').map(Number)
+      // Create date at end of day (23:59:59) in local timezone
+      const selected = new Date(year, month - 1, day, 23, 59, 59)
+      if (isNaN(selected.getTime())) {
+        // fallback to 7 days from now
+        deadlineTimestamp = BigInt(Math.floor(Date.now() / 1000) + 7 * 86400)
+      } else {
+        // Convert milliseconds to seconds for Unix timestamp
+        deadlineTimestamp = BigInt(Math.floor(selected.getTime() / 1000))
+      }
+    } else {
+      const daysFromNow = parseInt(formData.deadline) || 7
+      deadlineTimestamp = BigInt(Math.floor(Date.now() / 1000) + daysFromNow * 86400)
+    }
 
-    setIsSubmitting(false)
-    setOpen(false)
-    setFormData({
-      title: "",
-      description: "",
-      reward: "",
-      severity: "",
-      deadline: "",
-    })
+    try {
+      writeContract({
+        ...BOUNTY_MANAGER_CONTRACT,
+        functionName: 'createBountyETH',
+        args: [
+          formData.title,
+          formData.description,
+          deadlineTimestamp,
+          formData.farcasterCastHash || "",
+        ],
+        value: parseEther(formData.reward),
+      })
+    } catch (err) {
+      console.error("Failed to create bounty:", err)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
+        <button className="glowing-button">
+          <Plus className="inline h-4 w-4 mr-2" />
           Submit Bounty
-        </Button>
+        </button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
@@ -152,11 +235,11 @@ export function SubmitBountyDialog() {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !isConnected}>
-              {isSubmitting ? (
+            <Button type="submit" disabled={isPending || isConfirming || !isConnected}>
+              {isPending || isConfirming ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  {isPending ? "Confirming..." : "Submitting..."}
                 </>
               ) : (
                 "Submit Bounty"

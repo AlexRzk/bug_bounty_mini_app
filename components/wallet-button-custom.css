@@ -1,0 +1,59 @@
+.wallet-btn {
+  border: none;
+  min-width: 10em;
+  height: 3em;
+  padding: 0 1.5em;
+  border-radius: 2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  background: #1c1a1c;
+  cursor: pointer;
+  transition: all 800ms ease-in-out;
+}
+
+.wallet-btn-icon {
+  stroke: #aaaaaa;
+  transition: all 1200ms ease;
+}
+
+.wallet-btn-text {
+  font-weight: 600;
+  color: #aaaaaa;
+  font-size: 0.9rem;
+  transition: color 800ms ease;
+  white-space: nowrap;
+}
+
+.wallet-btn:hover {
+  background: linear-gradient(0deg, #6899fe, blue);
+  box-shadow:
+    inset 0px 1px 0px 0px rgba(255, 255, 255, 0.4),
+    inset 0px -4px 0px 0px rgba(0, 0, 0, 0.2),
+    0px 0px 0px 4px rgba(255, 255, 255, 0.2),
+    0px 0px 180px 0px #9917ff;
+  transform: translateY(-2px);
+}
+
+.wallet-btn:hover .wallet-btn-text {
+  color: white;
+}
+
+.wallet-btn:hover .wallet-btn-icon {
+  stroke: white;
+  transform: scale(1.15);
+}
+
+/* Connected state styling */
+.wallet-btn-connected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.wallet-btn-connected .wallet-btn-text {
+  color: white;
+}
+
+.wallet-btn-connected .wallet-btn-icon {
+  stroke: white;
+}

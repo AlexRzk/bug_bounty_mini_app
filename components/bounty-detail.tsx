@@ -9,22 +9,9 @@ import { AlertCircle, Calendar, MessageSquare, User, ArrowLeft } from "lucide-re
 import Link from "next/link"
 import { SubmitResponseDialog } from "@/components/submit-response-dialog"
 import { ResponseList } from "@/components/response-list"
-
-// Mock data
-const mockBounty = {
-  id: "1",
-  title: "Critical Smart Contract Vulnerability",
-  description:
-    "Find and report critical vulnerabilities in our DeFi protocol smart contracts deployed on Base testnet. We are looking for issues related to reentrancy, access control, oracle manipulation, and any other critical security concerns. Please provide detailed reproduction steps and potential fixes.",
-  reward: "5.0 ETH",
-  severity: "critical",
-  status: "open",
-  submittedBy: "defi-protocol.eth",
-  deadline: "2025-02-15",
-  responses: 3,
-  contractAddress: "0x1234...5678",
-  scope: "Smart Contracts, DeFi Protocol",
-}
+import { useReadContract } from "wagmi"
+import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"
+import { formatEther } from "viem"
 
 const severityColors = {
   critical: "bg-destructive text-destructive-foreground",
@@ -42,6 +29,66 @@ const statusColors = {
 export function BountyDetail({ bountyId }: { bountyId: string }) {
   const [showResponses, setShowResponses] = useState(true)
 
+  // Read bounty data from contract - ALL HOOKS MUST BE AT THE TOP
+  const { data: bountyData, isLoading, isError } = useReadContract({
+    ...BOUNTY_MANAGER_CONTRACT,
+    functionName: 'getBounty',
+    args: [BigInt(bountyId)],
+  })
+
+  // Read submission count for this bounty - MUST BE BEFORE ANY EARLY RETURNS
+  const { data: submissionIds } = useReadContract({
+    ...BOUNTY_MANAGER_CONTRACT,
+    functionName: 'getBountySubmissions',
+    args: [BigInt(bountyId)],
+  })
+
+  // Now we can do early returns AFTER all hooks are called
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center space-y-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-sm text-muted-foreground">Loading bounty...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (isError || !bountyData) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Bounty not found or failed to load.</p>
+        <Link href="/">
+          <Button variant="outline" className="mt-4">
+            Back to Board
+          </Button>
+        </Link>
+      </div>
+    )
+  }
+
+  // Parse bounty data from contract
+  // getBounty returns: creator, title, description, reward, paymentType, tokenAddress, status, winner, deadline, farcasterCastHash
+  const [creator, title, description, reward, paymentType, tokenAddress, statusEnum, winner, deadline, farcasterCastHash] = bountyData as readonly [
+    `0x${string}`,
+    string,
+    string,
+    bigint,
+    number,
+    `0x${string}`,
+    number,
+    `0x${string}`,
+    bigint,
+    string
+  ]
+
+  const submissionIdArray = submissionIds as readonly bigint[] | undefined
+  const submissionCount = submissionIdArray?.length || 0
+  const rewardEth = formatEther(reward)
+  const deadlineDate = new Date(Number(deadline) * 1000).toLocaleDateString()
+  const status = Number(statusEnum) === 0 ? 'open' : Number(statusEnum) === 1 ? 'in-progress' : 'closed'
+
   return (
     <div className="space-y-6">
       <div>
@@ -57,36 +104,38 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
         <CardHeader className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex flex-wrap gap-2">
-              <Badge className={severityColors[mockBounty.severity as keyof typeof severityColors]}>
+              <Badge className={severityColors.high}>
                 <AlertCircle className="mr-1 h-3 w-3" />
-                {mockBounty.severity.toUpperCase()}
+                BOUNTY
               </Badge>
-              <Badge variant="outline" className={statusColors[mockBounty.status as keyof typeof statusColors]}>
-                {mockBounty.status}
+              <Badge variant="outline" className={statusColors[status as keyof typeof statusColors]}>
+                {status}
               </Badge>
             </div>
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Reward</p>
-              <p className="text-2xl font-bold text-accent">{mockBounty.reward}</p>
+              <p className="text-2xl font-bold text-accent">{rewardEth} ETH</p>
             </div>
           </div>
 
-          <h1 className="text-balance text-3xl font-bold tracking-tight text-foreground">{mockBounty.title}</h1>
+          <h1 className="text-balance text-3xl font-bold tracking-tight text-foreground">{title}</h1>
 
           <div className="flex flex-wrap gap-4 text-sm">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">by</span>
-              <span className="font-mono text-foreground">{mockBounty.submittedBy}</span>
+              <span className="font-mono text-foreground">
+                {creator.slice(0, 6)}...{creator.slice(-4)}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Deadline:</span>
-              <span className="text-foreground">{mockBounty.deadline}</span>
+              <span className="text-foreground">{deadlineDate}</span>
             </div>
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              <span className="text-foreground">{mockBounty.responses} responses</span>
+              <span className="text-foreground">{submissionCount.toString()} responses</span>
             </div>
           </div>
         </CardHeader>
@@ -94,7 +143,7 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
         <CardContent className="space-y-6">
           <div>
             <h3 className="text-lg font-semibold mb-2">Description</h3>
-            <p className="text-pretty text-muted-foreground leading-relaxed">{mockBounty.description}</p>
+            <p className="text-pretty text-muted-foreground leading-relaxed whitespace-pre-wrap">{description}</p>
           </div>
 
           <Separator />
@@ -102,12 +151,14 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <h4 className="font-semibold mb-2">Contract Address</h4>
-              <code className="text-sm bg-muted px-2 py-1 rounded">{mockBounty.contractAddress}</code>
+              <code className="text-sm bg-muted px-2 py-1 rounded break-all">{BOUNTY_MANAGER_CONTRACT.address}</code>
             </div>
-            <div>
-              <h4 className="font-semibold mb-2">Scope</h4>
-              <p className="text-sm text-muted-foreground">{mockBounty.scope}</p>
-            </div>
+            {farcasterCastHash && (
+              <div>
+                <h4 className="font-semibold mb-2">Farcaster Cast</h4>
+                <code className="text-sm bg-muted px-2 py-1 rounded break-all">{farcasterCastHash}</code>
+              </div>
+            )}
           </div>
 
           <Separator />
@@ -120,7 +171,7 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Responses ({mockBounty.responses})</h2>
+          <h2 className="text-2xl font-bold">Responses ({submissionCount.toString()})</h2>
           <Button variant="outline" size="sm" onClick={() => setShowResponses(!showResponses)}>
             {showResponses ? "Hide" : "Show"} Responses
           </Button>
