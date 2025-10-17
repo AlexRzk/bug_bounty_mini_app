@@ -1,0 +1,48 @@
+{
+  "accountAssociation": {
+    "header": "eyJma2MiOiAiZm9yY2UiLCAia2V5IjogIjAiLCAicHJvdG9jb2wiOiAibWVzc2FnZSIsICJzaWduYXR1cmUiOiAiMHgifQ",
+    "payload": "eyJkb21haW4iOiAiYnVnLWJvdW50eS1taW5pLWFwcC1zd2liLnZlcmNlbC5hcHAiLCAidXJsIjogImh0dHBzOi8vYnVnLWJvdW50eS1taW5pLWFwcC1zd2liLnZlcmNlbC5hcHAifQ",
+    "signature": "0x"
+  },
+  "miniapp": {
+    "name": "BountyBuggy",
+    "version": "1.0.0",
+    "description": "Secure bug bounty platform with Farcaster integration on Base",
+    "url": "https://bug-bounty-mini-app-swib.vercel.app",
+    "logoUrl": "https://bug-bounty-mini-app-swib.vercel.app/favicon.ico",
+    "chainId": 84532,
+    "contractAddress": "0xBcEe9446a53605D70b172498F3A38e5Ec2b6dCCf",
+    "features": [
+      "create-bounties",
+      "submit-reports",
+      "accept-submissions",
+      "manage-fees",
+      "farcaster-frames"
+    ],
+    "permissions": [
+      "read-user-profile",
+      "write-transactions",
+      "read-contract-state"
+    ]
+  },
+  "baseBuilder": {
+    "ownerAddress": "0x49a35F59553552157A8D3aDab44b079C7e4dc64B",
+    "registeredAt": "2025-10-17",
+    "status": "active"
+  },
+  "socialLinks": {
+    "farcaster": "https://warpcast.com",
+    "github": "https://github.com/AlexRzk/bug_bounty_mini_app",
+    "website": "https://bug-bounty-mini-app-swib.vercel.app"
+  },
+  "metadata": {
+    "chain": "Base Sepolia",
+    "network": "testnet",
+    "deploymentUrl": "https://bug-bounty-mini-app-swib.vercel.app",
+    "apiEndpoints": {
+      "frames": "/api/frame",
+      "frameImage": "/api/frame/image",
+      "bountyManager": "0xBcEe9446a53605D70b172498F3A38e5Ec2b6dCCf"
+    }
+  }
+}
