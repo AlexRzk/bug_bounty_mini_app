@@ -47,13 +47,15 @@ export function BountyFilters({ currentFilter, onFilterChange, currentSort, onSo
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Sort by:</span>
         <Select value={currentSort} onValueChange={onSortChange}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[160px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="reward">Highest Reward</SelectItem>
             <SelectItem value="deadline">Deadline</SelectItem>
             <SelectItem value="responses">Most Responses</SelectItem>
+            <SelectItem value="newest">Newest First</SelectItem>
+            <SelectItem value="oldest">Oldest First</SelectItem>
           </SelectContent>
         </Select>
       </div>

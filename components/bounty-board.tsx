@@ -59,7 +59,7 @@ export function BountyBoard() {
     .map((query, index) => {
       if (!query.data) return null
       
-      const [creator, title, description, reward, paymentType, tokenAddress, status, winner, deadline, farcasterCastHash] = query.data as readonly [
+      const [creator, title, description, reward, paymentType, tokenAddress, status, winner, createdAt, deadline, farcasterCastHash] = query.data as readonly [
         `0x${string}`,
         string,
         string,
@@ -68,6 +68,7 @@ export function BountyBoard() {
         `0x${string}`,
         number,
         `0x${string}`,
+        bigint,
         bigint,
         string
       ]
@@ -89,6 +90,7 @@ export function BountyBoard() {
         severity: "high", // You can add severity logic based on reward size
         status: statusMap[Number(status)] || "open",
         submittedBy: creator?.slice(0, 6) + "..." + creator?.slice(-4),
+        createdAt: Number(createdAt),
         deadline: new Date(Number(deadline) * 1000).toISOString().split('T')[0],
         responses: 0, // You can fetch this via getBountySubmissions if needed
       }
@@ -101,6 +103,33 @@ export function BountyBoard() {
     if (filter === "high") return bounty.severity === "high"
     if (filter === "low") return bounty.severity === "low"
     return true
+  })
+
+  // Apply sorting
+  const sortedBounties = [...filteredBounties].sort((a, b) => {
+    switch (sortBy) {
+      case "reward": {
+        const aReward = parseFloat(a.reward.split(" ")[0])
+        const bReward = parseFloat(b.reward.split(" ")[0])
+        return bReward - aReward // Highest first
+      }
+      case "deadline": {
+        const aDate = new Date(a.deadline).getTime()
+        const bDate = new Date(b.deadline).getTime()
+        return aDate - bDate // Nearest first
+      }
+      case "responses": {
+        return b.responses - a.responses // Most responses first
+      }
+      case "newest": {
+        return b.createdAt - a.createdAt // Newest first
+      }
+      case "oldest": {
+        return a.createdAt - b.createdAt // Oldest first
+      }
+      default:
+        return 0
+    }
   })
 
   return (
@@ -121,7 +150,7 @@ export function BountyBoard() {
         <div className="text-center py-12">
           <p className="text-muted-foreground">Loading bounties from blockchain...</p>
         </div>
-      ) : filteredBounties.length === 0 ? (
+      ) : sortedBounties.length === 0 ? (
         <div className="text-center py-12 border border-dashed rounded-lg">
           <p className="text-muted-foreground mb-2">No bounties found on-chain yet.</p>
           <p className="text-sm text-muted-foreground">
@@ -130,7 +159,7 @@ export function BountyBoard() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredBounties.map((bounty) => bounty && (
+          {sortedBounties.map((bounty) => bounty && (
             <BountyCard key={bounty.id} bounty={bounty} />
           ))}
         </div>
