@@ -1,8 +1,8 @@
 {
   "accountAssociation": {
-    "header": "eyJma2MiOiAiZm9yY2UiLCAia2V5IjogIjAiLCAicHJvdG9jb2wiOiAibWVzc2FnZSIsICJzaWduYXR1cmUiOiAiMHgifQ",
-    "payload": "eyJkb21haW4iOiAiYnVnLWJvdW50eS1taW5pLWFwcC1zd2liLnZlcmNlbC5hcHAiLCAidXJsIjogImh0dHBzOi8vYnVnLWJvdW50eS1taW5pLWFwcC1zd2liLnZlcmNlbC5hcHAifQ",
-    "signature": "0x"
+    "header": "eyJmaWQiOjEzNzY2MjgsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHhhOTU0MTU1ZmIxRTFENjhBODI5MUQ1MmFBM0YwMkQ5NzM3MWEyNmVlIn0",
+    "payload": "eyJkb21haW4iOiJidWctYm91bnR5LW1pbmktYXBwLXN3aWIudmVyY2VsLmFwcCJ9",
+    "signature": "0bAB81IFvzpzHqt2GTr0OkTFsASyloUgSIj55AgeaAVt52AioR8MQRWQdCT2jYCM3eq2pnP9RbxgMaLDnQaXzxw="
   },
   "miniapp": {
     "name": "BountyBuggy",
