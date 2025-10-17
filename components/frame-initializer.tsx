@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import sdk from '@farcaster/frame-sdk'
 
 /**
  * Frame Initializer - Initializes Farcaster Frame SDK
@@ -13,30 +12,43 @@ export function FrameInitializer() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function initFrame() {
+    // Try to initialize Farcaster Frame SDK
+    const initFrame = async () => {
       try {
-        // Initialize Farcaster Frame SDK
-        await sdk.actions.ready()
-        setIsReady(true)
-        console.log('✅ Farcaster Frame SDK initialized')
+        // Dynamically import to avoid issues in non-frame context
+        const { default: sdk } = await import('@farcaster/frame-sdk')
+        
+        // Call ready synchronously if available
+        if (sdk?.actions?.ready) {
+          // ready() can be called synchronously
+          sdk.actions.ready()
+          console.log('✅ Farcaster Frame SDK ready() called')
+          setIsReady(true)
+        }
 
-        // Optional: Set initial context
-        const context = await sdk.context
-        console.log('Frame context:', {
-          user: context?.user,
-          client: context?.client,
-        })
+        // Get frame context for debugging
+        try {
+          const context = await sdk.context
+          console.log('Frame context:', {
+            user: context?.user,
+            client: context?.client,
+          })
+        } catch (e) {
+          console.log('No frame context available (running outside Farcaster)')
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
+        console.warn('Frame SDK not available:', message)
         setError(message)
-        console.error('❌ Frame initialization error:', message)
       }
     }
 
-    // Only initialize if running in Farcaster context
-    if (typeof window !== 'undefined') {
+    // Call immediately, but allow DOM to paint first
+    const timeoutId = setTimeout(() => {
       initFrame()
-    }
+    }, 0)
+
+    return () => clearTimeout(timeoutId)
   }, [])
 
   // Don't render anything - this is just for initialization
@@ -53,16 +65,19 @@ export function useFrameReady() {
   useEffect(() => {
     const checkFrame = async () => {
       try {
-        const isFrameContext = sdk.context
-        setIsInFrame(!!isFrameContext)
-
-        if (isFrameContext) {
-          await sdk.actions.ready()
+        const { default: sdk } = await import('@farcaster/frame-sdk')
+        const context = await sdk.context
+        
+        if (context) {
+          setIsInFrame(true)
           setIsReady(true)
+        } else {
+          setIsInFrame(false)
         }
       } catch (err) {
         console.log('Not in frame context:', err)
         setIsInFrame(false)
+        setIsReady(false)
       }
     }
 
