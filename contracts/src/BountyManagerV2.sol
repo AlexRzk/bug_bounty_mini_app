@@ -364,7 +364,7 @@ contract BountyManagerV2 is Ownable2Step, ReentrancyGuard, Pausable {
             require(successWinner, "Winner payout failed");
 
             if (platformFee > 0) {
-                (bool successFee, ) = payable(feeCollector).call{value: platformFee, gas: 10000}("");
+                (bool successFee, ) = payable(feeCollector).call{value: platformFee}("");
                 require(successFee, "Fee transfer failed");
             }
         } else {
@@ -466,10 +466,10 @@ contract BountyManagerV2 is Ownable2Step, ReentrancyGuard, Pausable {
         emit WhitelistStatusUpdated(_enabled);
     }
 
-    function setTokenWhitelisted(address _token, bool _status) external payable onlyOwner {
+    function setTokenWhitelisted(address _token, bool _isWhitelisted) external payable onlyOwner {
         require(_token != address(0), "Invalid token");
-        supportedTokens[_token] = _status;
-        emit TokenWhitelisted(_token, _status);
+        supportedTokens[_token] = _isWhitelisted;
+        emit TokenWhitelisted(_token, _isWhitelisted);
     }
 
     function pause() external onlyOwner {
