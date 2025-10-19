@@ -422,9 +422,9 @@ contract BountyManager is Ownable, ReentrancyGuard, Pausable {
     /**
      * @notice Add/remove token from whitelist
      */
-    function setTokenWhitelisted(address _token, bool _status) external onlyOwner {
-        supportedTokens[_token] = _status;
-        emit TokenWhitelisted(_token, _status);
+    function setTokenWhitelisted(address _token, bool _isWhitelisted) external onlyOwner {
+        supportedTokens[_token] = _isWhitelisted;
+        emit TokenWhitelisted(_token, _isWhitelisted);
     }
 
     /**

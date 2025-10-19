@@ -180,7 +180,7 @@ contract BountyManagerTest is Test {
         bountyManager.acceptSubmission(submissionId);
 
         // Check payouts
-        uint256 expectedFee = (REWARD_AMOUNT * 250) / 10000; // 2.5%
+        uint256 expectedFee = (REWARD_AMOUNT * 500) / 10000; // 5%
         uint256 expectedPayout = REWARD_AMOUNT - expectedFee;
 
         assertEq(submitter1.balance, initialBalance + expectedPayout);
@@ -269,7 +269,7 @@ contract BountyManagerTest is Test {
         vm.prank(creator);
         bountyManager.acceptSubmission(submissionId);
 
-        uint256 expectedFee = (TOKEN_REWARD * 250) / 10000;
+        uint256 expectedFee = (TOKEN_REWARD * 500) / 10000; // 5%
         uint256 expectedPayout = TOKEN_REWARD - expectedFee;
 
         assertEq(mockToken.balanceOf(submitter1), initialBalance + expectedPayout);
