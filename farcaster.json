@@ -11,7 +11,7 @@
     "url": "https://bug-bounty-mini-app-swib.vercel.app",
     "logoUrl": "https://bug-bounty-mini-app-swib.vercel.app/favicon.ico",
     "chainId": 84532,
-    "contractAddress": "0x3e2ca92C48FE3BbF0c83c6E69DcE680BA63C193B",
+    "contractAddress": "0x5Eb412b6FcB13225C3d5C2aE39570D86a894C11a",
     "features": [
       "create-bounties",
       "submit-reports",
@@ -42,7 +42,7 @@
     "apiEndpoints": {
       "frames": "/api/frame",
       "frameImage": "/api/frame/image",
-      "bountyManager": "0x3e2ca92C48FE3BbF0c83c6E69DcE680BA63C193B"
+      "bountyManager": "0x5Eb412b6FcB13225C3d5C2aE39570D86a894C11a"
     }
   }
 }
