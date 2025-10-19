@@ -89,6 +89,13 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
   const deadlineDate = new Date(Number(deadline) * 1000).toLocaleDateString()
   const status = Number(statusEnum) === 0 ? 'open' : Number(statusEnum) === 1 ? 'in-progress' : 'closed'
   
+  // Calculate severity based on reward amount
+  const rewardValue = parseFloat(rewardEth)
+  let severity = "low"
+  if (rewardValue >= 0.1) severity = "critical"
+  else if (rewardValue >= 0.01) severity = "high"
+  else if (rewardValue >= 0.001) severity = "medium"
+  
   // Check if user is creator for submission visibility
   const { address } = useAccount()
   const isCreator = address?.toLowerCase() === creator.toLowerCase()
@@ -108,9 +115,9 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
         <CardHeader className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex flex-wrap gap-2">
-              <Badge className={severityColors.high}>
+              <Badge className={severityColors[severity as keyof typeof severityColors]}>
                 <AlertCircle className="mr-1 h-3 w-3" />
-                BOUNTY
+                {severity.toUpperCase()}
               </Badge>
               <Badge variant="outline" className={statusColors[status as keyof typeof statusColors]}>
                 {status}
