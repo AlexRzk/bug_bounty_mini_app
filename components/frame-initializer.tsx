@@ -5,32 +5,33 @@ import { useEffect } from 'react'
 /**
  * Frame Initializer - Initializes Farcaster Frame SDK
  * Must be rendered at the root level of the app
- * Calls sdk.actions.ready() synchronously when the frame is loaded
+ * Calls sdk.actions.ready() to dismiss splash screen
  */
 export function FrameInitializer() {
   useEffect(() => {
-    // Import and call ready() synchronously without async wrapper
-    let sdk: any
-    
-    try {
-      // Use require for synchronous import in useEffect
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      sdk = require('@farcaster/frame-sdk')
-      
-      if (sdk?.actions?.ready) {
-        // Call ready() immediately - must be synchronous
-        sdk.actions.ready()
-        console.log('✅ Farcaster Frame SDK ready() called successfully')
-      } else {
-        console.warn('⚠️ sdk.actions.ready not found')
+    // Call ready() to dismiss Farcaster splash screen
+    const initializeFrame = async () => {
+      try {
+        // Dynamic import of Farcaster Frame SDK
+        const sdk = await import('@farcaster/frame-sdk')
+        
+        if (sdk?.default?.actions?.ready) {
+          // Call ready() to signal frame is loaded
+          await sdk.default.actions.ready()
+          console.log('✅ Farcaster Frame ready() called')
+        } else if ((sdk as any)?.actions?.ready) {
+          await (sdk as any).actions.ready()
+          console.log('✅ Farcaster Frame ready() called')
+        }
+      } catch (err) {
+        // Not in Farcaster frame context or SDK not available
+        console.debug('Frame SDK not available (normal when testing outside Farcaster)')
       }
-    } catch (err) {
-      // SDK not available or not in frame context - this is fine
-      console.debug('Frame SDK initialization:', err instanceof Error ? err.message : String(err))
     }
+
+    initializeFrame()
   }, [])
 
-  // Don't render anything - this is just for initialization
   return null
 }
 
