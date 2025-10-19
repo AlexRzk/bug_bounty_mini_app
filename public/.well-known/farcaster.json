@@ -7,36 +7,15 @@
   "frame": {
     "version": "1.0.0",
     "name": "Buggy Bounty",
-    "description": "Secure bug bounty platform with Farcaster integration on Base",
-    "iconUrl": "https://bug-bounty-mini-app-swib.vercel.app/favicon.ico",
-    "splashImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/api/frame/image?page=home",
+    "description": "Secure bug bounty platform with Farcaster integration on Base blockchain",
+    "iconUrl": "https://bug-bounty-mini-app-swib.vercel.app/logo.png",
+    "splashImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/splash.png",
     "splashBackgroundColor": "#0a0a0a",
     "homeUrl": "https://bug-bounty-mini-app-swib.vercel.app",
-    "primaryCategory": "social",
-    "tags": ["marketing", "ads", "quickstart", "waitlist"],
-    "ogTitle": "Buggy Bounty - Bug Bounty Platform",
-    "ogDescription": "Discover and submit bug bounties on Base",
-    "ogImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/api/frame/image?page=home"
-  },
-  "miniapp": {
-    "version": "1.0.0",
-    "name": "Cubey",
-    "subtitle": "Your AI Ad Companion",
-    "description": "AI-powered ad creation and management",
-    "screenshotUrls": [
-      "https://bug-bounty-mini-app-swib.vercel.app/screenshot-portrait.png"
-    ],
-    "iconUrl": "https://bug-bounty-mini-app-swib.vercel.app/blue-icon.png",
-    "splashImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/blue-hero.png",
-    "splashBackgroundColor": "#000000",
-    "homeUrl": "https://bug-bounty-mini-app-swib.vercel.app",
-    "webhookUrl": "https://bug-bounty-mini-app-swib.vercel.app/api/webhook",
-    "primaryCategory": "social",
-    "tags": ["marketing", "ads", "quickstart", "waitlist"],
-    "heroImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/blue-hero.png",
-    "tagline": "",
-    "ogTitle": "Cubey — Your AI Ad Companion",
-    "ogDescription": "AI-powered ad creation and management for your projects.",
-    "ogImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/blue-hero.png"
+    "primaryCategory": "tech",
+    "tags": ["bounty", "bug", "security", "hacker", "money", "base", "mini-app", "futuristic", "platform"],
+    "ogTitle": "Buggy Bounty - Secure Bug Bounty Platform",
+    "ogDescription": "Discover and submit security bug bounties on Base blockchain. Earn rewards for finding vulnerabilities.",
+    "ogImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/og-image.png"
   }
 }
