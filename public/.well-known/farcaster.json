@@ -1,5 +1,5 @@
 {
- "accountAssociation": {
+  "accountAssociation": {
     "header": "eyJmaWQiOjEzNzY2MjgsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHhhOTU0MTU1ZmIxRTFENjhBODI5MUQ1MmFBM0YwMkQ5NzM3MWEyNmVlIn0",
     "payload": "eyJkb21haW4iOiJidWctYm91bnR5LW1pbmktYXBwLXN3aWIudmVyY2VsLmFwcCJ9",
     "signature": "0bAB81IFvzpzHqt2GTr0OkTFsASyloUgSIj55AgeaAVt52AioR8MQRWQdCT2jYCM3eq2pnP9RbxgMaLDnQaXzxw="
@@ -7,9 +7,14 @@
   "frame": {
     "version": "1.0.0",
     "name": "Buggy Bounty",
-    "iconUrl": "https://placeholder.svg?height=200&width=200&query=shield+icon",
-    "splashImageUrl": "https://placeholder.svg?height=600&width=600&query=bug+bounty+splash",
+    "description": "Secure bug bounty platform with Farcaster integration on Base",
+    "iconUrl": "https://bug-bounty-mini-app-swib.vercel.app/favicon.ico",
+    "splashImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/api/frame/image?page=home",
     "splashBackgroundColor": "#0a0a0a",
-    "homeUrl": "https://bug-bounty-mini-app-swib.vercel.app"
+    "homeUrl": "https://bug-bounty-mini-app-swib.vercel.app",
+    "ogTitle": "Buggy Bounty - Bug Bounty Platform",
+    "ogDescription": "Discover and submit bug bounties on Base Sepolia",
+    "ogImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/api/frame/image?page=home"
   }
 }
+
