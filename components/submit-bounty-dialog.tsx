@@ -112,6 +112,27 @@ export function SubmitBountyDialog() {
       return
     }
 
+    // Validate reward amount
+    const rewardAmount = parseFloat(formData.reward)
+    if (isNaN(rewardAmount) || rewardAmount <= 0) {
+      toast({
+        title: "Invalid reward",
+        description: "Please enter a valid reward amount greater than 0.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate deadline
+    if (!formData.deadline) {
+      toast({
+        title: "Invalid deadline",
+        description: "Please select a deadline date.",
+        variant: "destructive",
+      })
+      return
+    }
+
     // Calculate deadline timestamp.
     // The UI uses a date input (YYYY-MM-DD). Set deadline to end-of-day local time.
     let deadlineTimestamp: bigint
@@ -121,12 +142,30 @@ export function SubmitBountyDialog() {
       // Create date at end of day (23:59:59) in local timezone
       const selected = new Date(year, month - 1, day, 23, 59, 59)
       if (isNaN(selected.getTime())) {
-        // fallback to 7 days from now
-        deadlineTimestamp = BigInt(Math.floor(Date.now() / 1000) + 7 * 86400)
-      } else {
-        // Convert milliseconds to seconds for Unix timestamp
-        deadlineTimestamp = BigInt(Math.floor(selected.getTime() / 1000))
+        toast({
+          title: "Invalid date format",
+          description: "Please enter a valid deadline date.",
+          variant: "destructive",
+        })
+        return
       }
+      
+      // Check if deadline is in the past
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const selectedDate = new Date(year, month - 1, day)
+      
+      if (selectedDate < today) {
+        toast({
+          title: "Invalid deadline",
+          description: "The deadline must be today or in the future.",
+          variant: "destructive",
+        })
+        return
+      }
+      
+      // Convert milliseconds to seconds for Unix timestamp
+      deadlineTimestamp = BigInt(Math.floor(selected.getTime() / 1000))
     } else {
       const daysFromNow = parseInt(formData.deadline) || 7
       deadlineTimestamp = BigInt(Math.floor(Date.now() / 1000) + daysFromNow * 86400)
@@ -227,8 +266,10 @@ export function SubmitBountyDialog() {
               type="date"
               value={formData.deadline}
               onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+              min={new Date().toISOString().split('T')[0]}
               required
             />
+            <p className="text-xs text-muted-foreground">Select today or any future date</p>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
