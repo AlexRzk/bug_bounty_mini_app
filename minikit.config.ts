@@ -108,7 +108,7 @@ export const minikitConfig: MinikitConfig = {
 
   // Contract configuration for frame interactions
   contract: {
-    address: process.env.NEXT_PUBLIC_BOUNTY_CONTRACT || '0xBcEe9446a53605D70b172498F3A38e5Ec2b6dCCf',
+    address: process.env.NEXT_PUBLIC_BOUNTY_CONTRACT || '0x3e2ca92C48FE3BbF0c83c6E69DcE680BA63C193B',
     chainId: 84532, // Base Sepolia chain ID
   },
 
