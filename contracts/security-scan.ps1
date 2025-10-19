@@ -70,7 +70,7 @@ Write-Host "   📄 slither-report.txt       - Slither static analysis" -Foregro
 Write-Host "   📄 coverage-report.txt      - Test coverage details" -ForegroundColor Gray
 Write-Host "   📄 .gas-snapshot            - Gas usage snapshot" -ForegroundColor Gray
 Write-Host ""
-Write-Host "🔍 Next Steps:" -ForegroundColor White
+Write-Host "Next Steps:" -ForegroundColor White
 Write-Host "   1. Review slither-report.txt for vulnerabilities" -ForegroundColor Gray
 Write-Host "   2. Fix any HIGH or MEDIUM severity issues" -ForegroundColor Gray
 Write-Host "   3. Re-run this script after fixes" -ForegroundColor Gray
