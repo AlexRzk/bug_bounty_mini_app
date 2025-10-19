@@ -16,6 +16,6 @@
     "tags": ["bounty", "bug", "security", "base"],
     "ogTitle": "Buggy Bounty",
     "ogDescription": "Find bugs, earn rewards on Base blockchain. Secure smart contract bug bounty platform.",
-    "ogImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/og-image.png"
+    "ogImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/og-image.svg"
   }
 }

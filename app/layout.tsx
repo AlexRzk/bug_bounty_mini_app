@@ -14,9 +14,9 @@ export const metadata: Metadata = {
   description: "Discover and submit bug bounties. Secure, fast, and rewarding blockchain-based bug bounty platform on Base.",
   generator: "Next.js",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/apple-icon.png",
+    icon: "/app-icon.svg",
+    shortcut: "/app-icon.svg",
+    apple: "/app-icon.svg",
   },
   openGraph: {
     title: "Buggy Bounty - Security Bug Bounty Platform",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     siteName: "Buggy Bounty",
     images: [
       {
-        url: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app-swib.vercel.app"}/og-image.png`,
+        url: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app-swib.vercel.app"}/og-image.svg`,
         width: 1200,
         height: 630,
         alt: "Buggy Bounty Platform",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Buggy Bounty - Security Bug Bounty Platform",
     description: "Discover and submit bug bounties on Base",
-    images: [`${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app-swib.vercel.app"}/og-image.png`],
+    images: [`${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app-swib.vercel.app"}/og-image.svg`],
   },
   // Farcaster Frame metadata
   other: {
