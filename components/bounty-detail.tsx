@@ -9,7 +9,7 @@ import { AlertCircle, Calendar, MessageSquare, User, ArrowLeft } from "lucide-re
 import Link from "next/link"
 import { SubmitResponseDialog } from "@/components/submit-response-dialog"
 import { ResponseList } from "@/components/response-list"
-import { useReadContract } from "wagmi"
+import { useReadContract, useAccount } from "wagmi"
 import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"
 import { formatEther } from "viem"
 
@@ -88,6 +88,10 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
   const rewardEth = formatEther(reward)
   const deadlineDate = new Date(Number(deadline) * 1000).toLocaleDateString()
   const status = Number(statusEnum) === 0 ? 'open' : Number(statusEnum) === 1 ? 'in-progress' : 'closed'
+  
+  // Check if user is creator for submission visibility
+  const { address } = useAccount()
+  const isCreator = address?.toLowerCase() === creator.toLowerCase()
 
   return (
     <div className="space-y-6">
@@ -162,6 +166,19 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
           </div>
 
           <Separator />
+
+          {/* Security Notice */}
+          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex gap-3">
+              <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-semibold text-blue-900 dark:text-blue-100">🔒 Secure Submission Process</p>
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  All vulnerability submissions are kept private until the bounty creator accepts a solution. This protects researchers from having their vulnerabilities exploited before a patch is released.
+                </p>
+              </div>
+            </div>
+          </div>
 
           <div className="flex justify-end">
             <SubmitResponseDialog bountyId={bountyId} />

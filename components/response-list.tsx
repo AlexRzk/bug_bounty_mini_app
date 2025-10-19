@@ -65,6 +65,23 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
     )
   }
 
+  // Security: Only show submissions to bounty creator or accepted submissions to others
+  if (!isCreator) {
+    return (
+      <div className="text-center py-8 border-2 border-dashed border-muted rounded-lg">
+        <div className="space-y-2">
+          <p className="font-semibold text-foreground">🔒 Submissions are Private</p>
+          <p className="text-sm text-muted-foreground">
+            Only the bounty creator can view submission details before acceptance.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            This protects researchers from having their vulnerabilities publicly exploited.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   const handleAcceptSubmission = async (submissionId: bigint) => {
     if (!isCreator) return
     
