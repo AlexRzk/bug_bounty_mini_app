@@ -6,10 +6,11 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "verify:miniapp": "node scripts/verify-miniapp.js"
   },
   "dependencies": {
-    "@farcaster/frame-sdk": "^0.1.12",
+    "@farcaster/miniapp-sdk": "^0.2.1",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",

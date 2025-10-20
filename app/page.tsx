@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic"
 import { Header } from "@/components/header"
+import { useEffect, useState } from "react"
+import { isMiniAppContext } from "@/lib/miniapp-detection"
 
 // Load BountyBoardMagic only on client side to prevent SSR hydration issues
 const BountyBoardMagic = dynamic(
@@ -20,9 +22,17 @@ const BountyBoardMagic = dynamic(
 )
 
 export default function Home() {
+  const [isMiniApp, setIsMiniApp] = useState(false)
+
+  useEffect(() => {
+    // Detect if running in Mini App context
+    setIsMiniApp(isMiniAppContext())
+  }, [])
+
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      {/* Show header in web mode, hide in Mini App mode for cleaner UI */}
+      {!isMiniApp && <Header />}
       <main className="container mx-auto px-4 py-8">
         <BountyBoardMagic />
       </main>

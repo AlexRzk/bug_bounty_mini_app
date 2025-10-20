@@ -1,60 +1,61 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { sdk } from '@farcaster/miniapp-sdk'
 
 /**
- * Frame Initializer - Initializes Farcaster Frame SDK
+ * Mini App Initializer - Initializes Farcaster Mini App SDK
  * Must be rendered at the root level of the app
  * Calls sdk.actions.ready() to dismiss splash screen
  */
 export function FrameInitializer() {
   useEffect(() => {
     // Call ready() to dismiss Farcaster splash screen
-    const initializeFrame = async () => {
+    const initializeMiniApp = async () => {
       try {
-        // Dynamic import of Farcaster Frame SDK
-        const sdk = await import('@farcaster/frame-sdk')
-        
-        if (sdk?.default?.actions?.ready) {
-          // Call ready() to signal frame is loaded
-          await sdk.default.actions.ready()
-          console.log('✅ Farcaster Frame ready() called')
-        } else if ((sdk as any)?.actions?.ready) {
-          await (sdk as any).actions.ready()
-          console.log('✅ Farcaster Frame ready() called')
-        }
+        // Wait for app to be fully loaded and ready to display
+        await sdk.actions.ready()
+        console.log('✅ Farcaster Mini App ready() called')
       } catch (err) {
-        // Not in Farcaster frame context or SDK not available
-        console.debug('Frame SDK not available (normal when testing outside Farcaster)')
+        // Not in Farcaster Mini App context or SDK not available
+        console.debug('Mini App SDK not available (normal when testing outside Farcaster)', err)
       }
     }
 
-    initializeFrame()
+    initializeMiniApp()
   }, [])
 
   return null
 }
 
 /**
- * Hook to check if frame is ready and get frame context
+ * Hook to check if Mini App is ready and get context
  */
 export function useFrameReady() {
+  const [context, setContext] = useState<any>(null)
+
   useEffect(() => {
-    // Check if we have frame context available
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const sdk = require('@farcaster/frame-sdk')
-      sdk.context?.then((context: any) => {
-        if (context?.user?.fid) {
-          console.log(`Frame user FID: ${context.user.fid}`)
+    // Get Mini App context
+    const getContext = async () => {
+      try {
+        const ctx = await sdk.context
+        setContext(ctx)
+        
+        if (ctx?.user?.fid) {
+          console.log(`Mini App user FID: ${ctx.user.fid}`)
         }
-      }).catch(() => {
-        console.debug('Not in Farcaster frame context')
-      })
-    } catch (err) {
-      // SDK not available
+        
+        // Log location context
+        if (ctx?.location) {
+          console.log(`Mini App location:`, ctx.location)
+        }
+      } catch (err) {
+        console.debug('Not in Farcaster Mini App context')
+      }
     }
+
+    getContext()
   }, [])
 
-  return true
+  return { ready: true, context }
 }

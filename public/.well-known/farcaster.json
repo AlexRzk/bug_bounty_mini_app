@@ -4,18 +4,13 @@
     "payload": "eyJkb21haW4iOiJidWctYm91bnR5LW1pbmktYXBwLXN3aWIudmVyY2VsLmFwcCJ9",
     "signature": "0bAB81IFvzpzHqt2GTr0OkTFsASyloUgSIj55AgeaAVt52AioR8MQRWQdCT2jYCM3eq2pnP9RbxgMaLDnQaXzxw="
   },
-  "frame": {
-    "version": "next",
-    "name": "Buggy Bounty",
-    "description": "Secure bug bounty platform on Base blockchain",
+  "miniapp": {
+    "version": "1",
+    "name": "Bounty Hunter",
+    "description": "Secure bug bounty platform on Base blockchain. Find bugs, earn rewards.",
     "iconUrl": "https://bug-bounty-mini-app-swib.vercel.app/app-icon.svg",
     "splashImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/splash.svg",
     "splashBackgroundColor": "#0a0a0a",
-    "homeUrl": "https://bug-bounty-mini-app-swib.vercel.app",
-    "primaryCategory": "developer-tools",
-    "tags": ["bounty", "bug", "security", "base"],
-    "ogTitle": "Buggy Bounty",
-    "ogDescription": "Find bugs, earn rewards on Base blockchain. Secure smart contract bug bounty platform.",
-    "ogImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/og-image.svg"
+    "homeUrl": "https://bug-bounty-mini-app-swib.vercel.app"
   }
 }
