@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     siteName: "Buggy Bounty",
     images: [
       {
-        url: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/og-image.svg`,
+        url: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/og-image.png`,
         width: 1200,
         height: 630,
         alt: "Buggy Bounty Platform",
@@ -40,20 +40,20 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Buggy Bounty - Security Bug Bounty Platform",
     description: "Discover and submit bug bounties on Base",
-    images: [`${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/og-image.svg`],
+    images: [`${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/og-image.png`],
   },
   // Farcaster Mini App embed metadata
   other: {
     "fc:miniapp": JSON.stringify({
       version: "1",
-      imageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/og-image.svg`,
+      imageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/og-image.png`,
       button: {
         title: "Open Bounty Hunter",
         action: {
           type: "launch_frame",
           name: "Bounty Hunter",
           url: process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app",
-          splashImageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/app-icon.svg`,
+          splashImageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/app-icon.png`,
           splashBackgroundColor: "#0a0a0a"
         }
       }
@@ -61,14 +61,14 @@ export const metadata: Metadata = {
     // Backward compatibility with fc:frame
     "fc:frame": JSON.stringify({
       version: "1",
-      imageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/og-image.svg`,
+      imageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/og-image.png`,
       button: {
         title: "Open Bounty Hunter",
         action: {
           type: "launch_frame",
           name: "Bounty Hunter",
           url: process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app",
-          splashImageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/app-icon.svg`,
+          splashImageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/app-icon.png`,
           splashBackgroundColor: "#0a0a0a"
         }
       }
