@@ -9,7 +9,7 @@ const NEW_COLLECTOR = process.env.NEW_COLLECTOR // 0x...
 const PRIVATE_KEY = process.env.PRIVATE_KEY // 0x...
 
 if (!NEW_COLLECTOR || !PRIVATE_KEY) {
-  console.error('Usage: NEW_COLLECTOR=0x... PRIVATE_KEY=0x... node scripts/set-fee-collector.mjs')
+  console.error('Usage: NEW_COLLECTOR=0x... PRIVATE_KEY=0x... node ops/set-fee-collector.mjs')
   process.exit(1)
 }
 

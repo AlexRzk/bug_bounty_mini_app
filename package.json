@@ -6,8 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start",
-    "verify:miniapp": "node scripts/verify-miniapp.js"
+    "start": "next start"
   },
   "dependencies": {
     "@farcaster/miniapp-sdk": "^0.2.1",
