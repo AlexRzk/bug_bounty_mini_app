@@ -7,8 +7,8 @@
  * Searches for casts with bounty keywords
  * 
  * Setup with Vercel Cron:
- * - Add to vercel.json: "crons": [{ "path": "/api/monitor/mentions", "schedule": "*/5 * * * *" }]
- * - Runs every 5 minutes to check for new bounty casts
+ * Add to vercel.json crons array with path and schedule
+ * Runs every 5 minutes to check for new bounty casts
  */
 
 import { NextRequest, NextResponse } from 'next/server'
