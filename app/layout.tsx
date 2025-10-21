@@ -52,8 +52,8 @@ export const metadata: Metadata = {
         action: {
           type: "launch_frame",
           name: "Bounty Hunter",
-          url: process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app-swib.vercel.app",
-          splashImageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app-swib.vercel.app"}/splash.svg`,
+          url: process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app",
+          splashImageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/app-icon.svg`,
           splashBackgroundColor: "#0a0a0a"
         }
       }
@@ -61,14 +61,14 @@ export const metadata: Metadata = {
     // Backward compatibility with fc:frame
     "fc:frame": JSON.stringify({
       version: "1",
-      imageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app-swib.vercel.app"}/og-image.svg`,
+      imageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/og-image.svg`,
       button: {
         title: "Open Bounty Hunter",
         action: {
           type: "launch_frame",
           name: "Bounty Hunter",
-          url: process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app-swib.vercel.app",
-          splashImageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app-swib.vercel.app"}/splash.svg`,
+          url: process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app",
+          splashImageUrl: `${process.env.NEXT_PUBLIC_URL || "https://bug-bounty-mini-app.vercel.app"}/app-icon.svg`,
           splashBackgroundColor: "#0a0a0a"
         }
       }
