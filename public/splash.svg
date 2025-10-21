@@ -1,0 +1,53 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a2e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bugGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  
+  <!-- Grid pattern -->
+  <g opacity="0.1">
+    <line x1="0" y1="100" x2="1200" y2="100" stroke="#8b5cf6" stroke-width="1"/>
+    <line x1="0" y1="200" x2="1200" y2="200" stroke="#8b5cf6" stroke-width="1"/>
+    <line x1="0" y1="300" x2="1200" y2="300" stroke="#8b5cf6" stroke-width="1"/>
+    <line x1="0" y1="400" x2="1200" y2="400" stroke="#8b5cf6" stroke-width="1"/>
+    <line x1="0" y1="500" x2="1200" y2="500" stroke="#8b5cf6" stroke-width="1"/>
+    <line x1="200" y1="0" x2="200" y2="630" stroke="#8b5cf6" stroke-width="1"/>
+    <line x1="400" y1="0" x2="400" y2="630" stroke="#8b5cf6" stroke-width="1"/>
+    <line x1="600" y1="0" x2="600" y2="630" stroke="#8b5cf6" stroke-width="1"/>
+    <line x1="800" y1="0" x2="800" y2="630" stroke="#8b5cf6" stroke-width="1"/>
+    <line x1="1000" y1="0" x2="1000" y2="630" stroke="#8b5cf6" stroke-width="1"/>
+  </g>
+  
+  <!-- Bug icon (left side) -->
+  <g transform="translate(150, 215)">
+    <ellipse cx="100" cy="100" rx="60" ry="80" fill="url(#bugGradient)"/>
+    <circle cx="100" cy="60" r="30" fill="url(#bugGradient)"/>
+    <line x1="85" y1="40" x2="70" y2="20" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="115" y1="40" x2="130" y2="20" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="60" y1="80" x2="30" y2="70" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="60" y1="100" x2="25" y2="100" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="60" y1="120" x2="30" y2="130" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="140" y1="80" x2="170" y2="70" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="140" y1="100" x2="175" y2="100" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="140" y1="120" x2="170" y2="130" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+    <text x="85" y="115" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="#ffffff">$</text>
+  </g>
+  
+  <!-- Main text -->
+  <text x="500" y="280" font-family="Arial, sans-serif" font-size="96" font-weight="bold" fill="#ffffff">Buggy Bounty</text>
+  
+  <!-- Subtitle -->
+  <text x="500" y="360" font-family="Arial, sans-serif" font-size="36" fill="#8b5cf6">Find Bugs • Earn Rewards</text>
+  
+  <!-- Bottom text -->
+  <text x="500" y="450" font-family="Arial, sans-serif" font-size="28" fill="#666">Secure Bug Bounty Platform on Base</text>
+</svg>
