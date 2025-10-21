@@ -1,5 +1,9 @@
 # Farcaster Bot Feature - Quick Start 🚀
 
+## ✅ FREE TIER COMPATIBLE!
+
+**No paid Neynar plan required!** Uses polling instead of webhooks.
+
 ## What This Does
 
 Users can now create bounties by:
