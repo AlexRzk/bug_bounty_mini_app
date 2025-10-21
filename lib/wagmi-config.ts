@@ -1,17 +1,17 @@
 import { http, createConfig } from "wagmi"
-import { baseSepolia } from "wagmi/chains"
+import { base } from "wagmi/chains"
 import { injected } from "wagmi/connectors"
 
-// Base Sepolia testnet configuration
+// Base mainnet configuration
 export const config = createConfig({
-  chains: [baseSepolia],
+  chains: [base],
   connectors: [
     injected({
       shimDisconnect: true,
     }),
   ],
   transports: {
-    [baseSepolia.id]: http(),
+    [base.id]: http(),
   },
   ssr: true,
 })

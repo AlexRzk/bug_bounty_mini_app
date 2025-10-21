@@ -85,8 +85,8 @@ export const minikitConfig: MinikitConfig = {
   // Base blockchain configuration
   blockchain: {
     chainId: 'base',
-    chainName: 'Base Sepolia',
-    rpcUrl: process.env.NEXT_PUBLIC_BASE_RPC_URL || 'https://sepolia.base.org',
+    chainName: 'Base',
+    rpcUrl: process.env.NEXT_PUBLIC_BASE_RPC_URL || 'https://mainnet.base.org',
     currency: 'ETH',
   },
 
@@ -109,7 +109,7 @@ export const minikitConfig: MinikitConfig = {
   // Contract configuration for frame interactions
   contract: {
     address: process.env.NEXT_PUBLIC_BOUNTY_CONTRACT || '0x5Eb412b6FcB13225C3d5C2aE39570D86a894C11a',
-    chainId: 84532, // Base Sepolia chain ID
+    chainId: 8453, // Base mainnet chain ID
   },
 
   // Enable development mode logging

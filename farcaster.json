@@ -10,7 +10,7 @@
     "description": "Secure bug bounty platform with Farcaster integration on Base",
     "url": "https://bug-bounty-mini-app-swib.vercel.app",
     "logoUrl": "https://bug-bounty-mini-app-swib.vercel.app/favicon.ico",
-    "chainId": 84532,
+    "chainId": 8453,
     "contractAddress": "0x5Eb412b6FcB13225C3d5C2aE39570D86a894C11a",
     "features": [
       "create-bounties",
@@ -36,8 +36,8 @@
     "website": "https://bug-bounty-mini-app-swib.vercel.app"
   },
   "metadata": {
-    "chain": "Base Sepolia",
-    "network": "testnet",
+    "chain": "Base",
+    "network": "mainnet",
     "deploymentUrl": "https://bug-bounty-mini-app-swib.vercel.app",
     "apiEndpoints": {
       "frames": "/api/frame",
