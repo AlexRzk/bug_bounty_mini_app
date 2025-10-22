@@ -8,8 +8,8 @@
     "version": "1",
     "name": "Bounty Hunter",
     "description": "Secure bug bounty platform on Base blockchain. Find bugs, earn rewards.",
-    "iconUrl": "https://bug-bounty-mini-app.vercel.app/app-icon.png",
+    "iconUrl": "https://bug-bounty-mini-app-swib.vercel.app/app-icon.png",
     "splashBackgroundColor": "#0a0a0a",
-    "homeUrl": "https://bug-bounty-mini-app.vercel.app"
+    "homeUrl": "https://bug-bounty-mini-app-swib.vercel.app"
   }
 }
