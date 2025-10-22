@@ -1,7 +1,7 @@
 "use client"
 
 import { Shield, AlertCircle } from "lucide-react"
-import { WalletConnectButton } from "@/components/wallet-connect-button"
+import { FarcasterWalletButton } from "@/components/farcaster-wallet-button"
 import { useAccount, useSwitchChain } from "wagmi"
 import { baseSepolia } from "wagmi/chains"
 import { Button } from "@/components/ui/button"
@@ -44,7 +44,7 @@ export function Header() {
               Switch Network
             </Button>
           )}
-          <WalletConnectButton />
+          <FarcasterWalletButton />
         </div>
       </div>
     </header>
