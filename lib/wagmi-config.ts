@@ -15,7 +15,7 @@ export const config = createConfig({
     walletConnect({
       projectId,
       metadata: {
-        name: "Buggy Bounty",
+        name: "Bug Bounty Hunter",
         description: "Secure bug bounty platform on Base blockchain",
         url: "https://bug-bounty-mini-app-swib.vercel.app",
         icons: ["https://bug-bounty-mini-app-swib.vercel.app/app-icon.png"],
