@@ -6,10 +6,26 @@
   },
   "miniapp": {
     "version": "1",
-    "name": "Bounty Hunter",
-    "description": "Secure bug bounty platform on Base blockchain. Find bugs, earn rewards.",
+    "name": "Buggy Bounty",
     "iconUrl": "https://bug-bounty-mini-app-swib.vercel.app/app-icon.png",
+    "homeUrl": "https://bug-bounty-mini-app-swib.vercel.app",
+    "splashImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/app-icon.png",
     "splashBackgroundColor": "#0a0a0a",
-    "homeUrl": "https://bug-bounty-mini-app-swib.vercel.app"
+    "imageUrl": "https://bug-bounty-mini-app-swib.vercel.app/og-image.png",
+    "buttonTitle": "Open Bounty Hunter",
+    "subtitle": "Find Bugs • Earn Rewards",
+    "description": "Secure bug bounty platform on Base blockchain. Report vulnerabilities, earn ETH rewards, and help make the web3 ecosystem safer for everyone.",
+    "primaryCategory": "security",
+    "screenshotUrls": ["https://bug-bounty-mini-app-swib.vercel.app/screenshot1.png"],
+    "heroImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/og-image.png",
+    "tags": ["security", "bug-bounty", "blockchain", "rewards", "base"],
+    "tagline": "Secure Web3, One Bug at a Time",
+    "ogTitle": "Buggy Bounty - Security Bug Bounty Platform",
+    "ogDescription": "Find bugs, earn rewards. Secure bug bounty platform on Base blockchain.",
+    "ogImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/og-image.png",
+    "webhookUrl": "https://bug-bounty-mini-app-swib.vercel.app/api/webhook"
+  },
+  "baseBuilder": {
+    "ownerAddress": "0x49a35F59553552157A8D3aDab44b079C7e4dc64B"
   }
 }
