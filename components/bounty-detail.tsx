@@ -22,9 +22,9 @@ const severityColors = {
 
 const statusColors = {
   open: "bg-accent text-accent-foreground",
-  "in-progress": "bg-chart-2 text-foreground",
-  closed: "bg-muted text-muted-foreground",
-}
+  completed: "bg-chart-2 text-foreground",
+  cancelled: "bg-muted text-muted-foreground",
+} as const
 
 export function BountyDetail({ bountyId }: { bountyId: string }) {
   const [showResponses, setShowResponses] = useState(true)
@@ -42,6 +42,9 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
     functionName: 'getBountyResponses',
     args: [BigInt(bountyId)],
   })
+
+  // Account hook must stay above any conditional returns to preserve hook order
+  const { address } = useAccount()
 
   // Now we can do early returns AFTER all hooks are called
   if (isLoading) {
@@ -100,7 +103,7 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
   const rewardEth = formatEther(reward)
   const deadlineDate = new Date(Number(deadline) * 1000).toLocaleDateString()
 
-  const statusMap: Record<number, string> = {
+  const statusMap: Record<number, keyof typeof statusColors> = {
     0: 'open',
     1: 'completed',
     2: 'cancelled',
@@ -116,7 +119,6 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
   const severity = severityMap[Number(severityEnum)] || 'low'
   
   // Check if user is creator for submission visibility
-  const { address } = useAccount()
   const isCreator = address?.toLowerCase() === creator.toLowerCase()
 
   return (

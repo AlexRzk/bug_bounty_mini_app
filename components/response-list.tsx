@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { User, CheckCircle } from "lucide-react"
-import { useReadContract, useWriteContract, useAccount } from "wagmi"
+import { useReadContract, useWriteContract, useAccount, usePublicClient } from "wagmi"
 import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 const statusColors = {
   pending: "bg-chart-2 text-foreground",
@@ -18,6 +18,16 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
   const { address } = useAccount()
   const { writeContract } = useWriteContract()
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
+  const publicClient = usePublicClient()
+  const [responses, setResponses] = useState<Array<readonly [
+    bigint,
+    bigint,
+    `0x${string}`,
+    string,
+    bigint,
+    boolean
+  ]>>([])
+  const [responsesLoading, setResponsesLoading] = useState(false)
 
   // Read bounty to get creator
   const { data: bountyData } = useReadContract({
@@ -66,6 +76,47 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
   const isActive = Number(statusEnum) === 0
 
   const submissionIdArray = submissionIds as readonly bigint[] | undefined
+
+  useEffect(() => {
+    if (!publicClient || !submissionIdArray || submissionIdArray.length === 0) {
+      setResponses([])
+      return
+    }
+
+    let cancelled = false
+    setResponsesLoading(true)
+
+    Promise.all(
+      submissionIdArray.map((id) =>
+        publicClient.readContract({
+          ...BOUNTY_MANAGER_CONTRACT,
+          functionName: 'responses',
+          args: [id],
+        })
+      )
+    )
+      .then((result) => {
+        if (!cancelled) {
+          setResponses(result as typeof responses)
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load responses', err)
+        if (!cancelled) {
+          setResponses([])
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setResponsesLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [publicClient, submissionIdArray])
+
   if (!submissionIdArray || submissionIdArray.length === 0) {
     return (
       <div className="text-center py-8 border-2 border-dashed border-muted rounded-lg">
@@ -110,53 +161,36 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
 
   return (
     <div className="space-y-4">
-      {submissionIdArray.map((submissionId) => (
-        <SubmissionCard
-          key={submissionId.toString()}
-          submissionId={submissionId}
-          isCreator={isCreator}
-          isActive={isActive}
-          onAccept={() => handleAcceptSubmission(submissionId)}
-          isAccepting={acceptingId === submissionId.toString()}
-        />
-      ))}
+      {responsesLoading && responses.length === 0 ? (
+        <Card>
+          <CardContent className="py-8">
+            <p className="text-center text-sm text-muted-foreground">Loading submissions...</p>
+          </CardContent>
+        </Card>
+      ) : (
+        responses.map((response) => (
+          <SubmissionCard
+            key={response[0].toString()}
+            submission={response}
+            isCreator={isCreator}
+            isActive={isActive}
+            onAccept={() => handleAcceptSubmission(response[0])}
+            isAccepting={acceptingId === response[0].toString()}
+          />
+        ))
+      )}
     </div>
   )
 }
 
 function SubmissionCard({
-  submissionId,
+  submission,
   isCreator,
   isActive,
   onAccept,
   isAccepting,
 }: {
-  submissionId: bigint
-  isCreator: boolean
-  isActive: boolean
-  onAccept: () => void
-  isAccepting: boolean
-}) {
-  const { data: submissionData, isLoading } = useReadContract({
-    ...BOUNTY_MANAGER_CONTRACT,
-    functionName: 'submissions',
-    args: [submissionId],
-  })
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="py-8">
-          <p className="text-center text-sm text-muted-foreground">Loading submission...</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (!submissionData) return null
-
-  // responses returns: id, bountyId, responder, description, submittedAt, accepted
-  const [id, bountyIdFromSubmission, submitter, description, submittedAt, accepted] = submissionData as readonly [
+  submission: readonly [
     bigint,
     bigint,
     `0x${string}`,
@@ -164,6 +198,12 @@ function SubmissionCard({
     bigint,
     boolean
   ]
+  isCreator: boolean
+  isActive: boolean
+  onAccept: () => void
+  isAccepting: boolean
+}) {
+  const [, , submitter, description, submittedAt, accepted] = submission
 
   const submittedDate = new Date(Number(submittedAt) * 1000).toLocaleDateString()
   const status = accepted ? 'accepted' : 'pending'

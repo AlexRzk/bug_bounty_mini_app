@@ -504,6 +504,7 @@ export function BountyBoardMagic() {
     if (filter === "all") return true
     if (filter === "critical") return bounty.severity === "critical"
     if (filter === "high") return bounty.severity === "high"
+    if (filter === "medium") return bounty.severity === "medium"
     if (filter === "low") return bounty.severity === "low"
     return true
   })
@@ -562,6 +563,12 @@ export function BountyBoardMagic() {
       className: filter === 'low' ? 'dock-item-active' : ''
     },
     { 
+      icon: <VscWarning size={20} />, 
+      label: 'Medium', 
+      onClick: () => setFilter('medium'),
+      className: filter === 'medium' ? 'dock-item-active' : ''
+    },
+    { 
       icon: <VscListFilter size={20} />, 
       label: 'Sort', 
       onClick: () => setSortOpen(prev => !prev),
@@ -611,6 +618,11 @@ export function BountyBoardMagic() {
     }
     if (sortBy === 'date') {
       return b.deadlineTs - a.deadlineTs
+    }
+    if (sortBy === 'severity') {
+      const severityOrder = { critical: 3, high: 2, medium: 1, low: 0 }
+      return (severityOrder[b.severity as keyof typeof severityOrder] || 0) - 
+             (severityOrder[a.severity as keyof typeof severityOrder] || 0)
     }
     // reputation not available yet; keep original order
     return 0
@@ -666,6 +678,12 @@ export function BountyBoardMagic() {
                   onClick={() => { setSortBy('reward'); setSortOpen(false); }}
                 >
                   Reward
+                </button>
+                <button
+                  className={`dock-dropdown-item ${sortBy === 'severity' ? 'active' : ''}`}
+                  onClick={() => { setSortBy('severity'); setSortOpen(false); }}
+                >
+                  Severity
                 </button>
                 <button
                   className={`dock-dropdown-item ${sortBy === 'reputation' ? 'active' : ''}`}
