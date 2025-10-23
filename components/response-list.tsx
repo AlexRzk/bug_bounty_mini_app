@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { User, CheckCircle, ExternalLink } from "lucide-react"
+import { User, CheckCircle } from "lucide-react"
 import { useReadContract, useWriteContract, useAccount } from "wagmi"
 import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"
 import { useState } from "react"
@@ -22,14 +22,14 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
   // Read bounty to get creator
   const { data: bountyData } = useReadContract({
     ...BOUNTY_MANAGER_CONTRACT,
-    functionName: 'getBounty',
+    functionName: 'bounties',
     args: [BigInt(bountyId)],
   })
 
   // Read submission IDs for this bounty
   const { data: submissionIds } = useReadContract({
     ...BOUNTY_MANAGER_CONTRACT,
-    functionName: 'getBountySubmissions',
+    functionName: 'getBountyResponses',
     args: [BigInt(bountyId)],
   })
 
@@ -41,17 +41,26 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
     )
   }
 
-  const [creator, , , , , , statusEnum] = bountyData as readonly [
+  const [
+    ,
+    creator,
+    ,
+    ,
+    ,
+    ,
+    statusEnum,
+  ] = bountyData as readonly [
+    bigint,
     `0x${string}`,
     string,
     string,
     bigint,
     number,
-    `0x${string}`,
     number,
     `0x${string}`,
     bigint,
-    string
+    bigint,
+    bigint,
   ]
   const isCreator = address?.toLowerCase() === creator.toLowerCase()
   const isActive = Number(statusEnum) === 0
@@ -146,16 +155,14 @@ function SubmissionCard({
 
   if (!submissionData) return null
 
-  // submissions returns: id, bountyId, submitter, description, proofUrl, submittedAt, accepted, farcasterUsername
-  const [id, bountyIdFromSubmission, submitter, description, proofUrl, submittedAt, accepted, farcasterUsername] = submissionData as readonly [
+  // responses returns: id, bountyId, responder, description, submittedAt, accepted
+  const [id, bountyIdFromSubmission, submitter, description, submittedAt, accepted] = submissionData as readonly [
     bigint,
     bigint,
     `0x${string}`,
     string,
-    string,
     bigint,
-    boolean,
-    string
+    boolean
   ]
 
   const submittedDate = new Date(Number(submittedAt) * 1000).toLocaleDateString()
@@ -183,20 +190,6 @@ function SubmissionCard({
           <h4 className="font-semibold mb-2">Report</h4>
           <p className="text-pretty text-foreground whitespace-pre-wrap">{description}</p>
         </div>
-        {proofUrl && (
-          <div>
-            <h4 className="font-semibold mb-2">Evidence</h4>
-            <a
-              href={proofUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-primary hover:underline flex items-center gap-1"
-            >
-              {proofUrl}
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </div>
-        )}
         <div className="flex items-center justify-end gap-2">
           {isCreator && !accepted && isActive && (
             <Button

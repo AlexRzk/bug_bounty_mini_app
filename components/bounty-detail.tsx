@@ -32,14 +32,14 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
   // Read bounty data from contract - ALL HOOKS MUST BE AT THE TOP
   const { data: bountyData, isLoading, isError } = useReadContract({
     ...BOUNTY_MANAGER_CONTRACT,
-    functionName: 'getBounty',
+    functionName: 'bounties',
     args: [BigInt(bountyId)],
   })
 
   // Read submission count for this bounty - MUST BE BEFORE ANY EARLY RETURNS
   const { data: submissionIds } = useReadContract({
     ...BOUNTY_MANAGER_CONTRACT,
-    functionName: 'getBountySubmissions',
+    functionName: 'getBountyResponses',
     args: [BigInt(bountyId)],
   })
 
@@ -68,33 +68,52 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
     )
   }
 
-  // Parse bounty data from contract
-  // getBounty returns: creator, title, description, reward, paymentType, tokenAddress, status, winner, deadline, farcasterCastHash
-  const [creator, title, description, reward, paymentType, tokenAddress, statusEnum, winner, deadline, farcasterCastHash] = bountyData as readonly [
+  // Parse bounty data from contract (mapping returns full struct)
+  const [
+    id,
+    creator,
+    title,
+    description,
+    reward,
+    severityEnum,
+    statusEnum,
+    winner,
+    createdAt,
+    deadline,
+    responseCount,
+  ] = bountyData as readonly [
+    bigint,
     `0x${string}`,
     string,
     string,
     bigint,
     number,
-    `0x${string}`,
     number,
     `0x${string}`,
     bigint,
-    string
+    bigint,
+    bigint,
   ]
 
   const submissionIdArray = submissionIds as readonly bigint[] | undefined
-  const submissionCount = submissionIdArray?.length || 0
+  const submissionCount = submissionIdArray?.length ?? Number(responseCount ?? 0n)
   const rewardEth = formatEther(reward)
   const deadlineDate = new Date(Number(deadline) * 1000).toLocaleDateString()
-  const status = Number(statusEnum) === 0 ? 'open' : Number(statusEnum) === 1 ? 'in-progress' : 'closed'
-  
-  // Calculate severity based on reward amount
-  const rewardValue = parseFloat(rewardEth)
-  let severity = "low"
-  if (rewardValue >= 0.1) severity = "critical"
-  else if (rewardValue >= 0.01) severity = "high"
-  else if (rewardValue >= 0.001) severity = "medium"
+
+  const statusMap: Record<number, string> = {
+    0: 'open',
+    1: 'completed',
+    2: 'cancelled',
+  }
+  const status = statusMap[Number(statusEnum)] || 'open'
+
+  const severityMap: Record<number, string> = {
+    0: 'low',
+    1: 'medium',
+    2: 'high',
+    3: 'critical',
+  }
+  const severity = severityMap[Number(severityEnum)] || 'low'
   
   // Check if user is creator for submission visibility
   const { address } = useAccount()
@@ -164,12 +183,6 @@ export function BountyDetail({ bountyId }: { bountyId: string }) {
               <h4 className="font-semibold mb-2">Contract Address</h4>
               <code className="text-sm bg-muted px-2 py-1 rounded break-all">{BOUNTY_MANAGER_CONTRACT.address}</code>
             </div>
-            {farcasterCastHash && (
-              <div>
-                <h4 className="font-semibold mb-2">Farcaster Cast</h4>
-                <code className="text-sm bg-muted px-2 py-1 rounded break-all">{farcasterCastHash}</code>
-              </div>
-            )}
           </div>
 
           <Separator />
