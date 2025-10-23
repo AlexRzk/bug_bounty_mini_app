@@ -38,6 +38,7 @@ contract BountyManagerV2 is Ownable, ReentrancyGuard {
         BountyStatus status;
         address winner;
         uint256 createdAt;
+        uint256 deadline;
         uint256 responseCount;
     }
     
@@ -68,7 +69,8 @@ contract BountyManagerV2 is Ownable, ReentrancyGuard {
         address indexed creator,
         string title,
         uint256 reward,
-        Severity severity
+        Severity severity,
+        uint256 deadline
     );
     
     event ResponseSubmitted(
@@ -114,6 +116,7 @@ contract BountyManagerV2 is Ownable, ReentrancyGuard {
      * @param _title Bounty title
      * @param _description Detailed bounty description
      * @param _severity Bug severity level (0=Low, 1=Medium, 2=High, 3=Critical)
+     * @param _deadline Unix timestamp for bounty deadline (must be in future)
      * @param _creator Original creator address (for bot submissions)
      * @return bountyId The created bounty ID
      */
@@ -121,11 +124,13 @@ contract BountyManagerV2 is Ownable, ReentrancyGuard {
         string memory _title,
         string memory _description,
         Severity _severity,
+        uint256 _deadline,
         address _creator
     ) external payable nonReentrant returns (uint256) {
         require(msg.value > 0, "Reward must be greater than 0");
         require(bytes(_title).length > 0, "Title cannot be empty");
         require(bytes(_description).length > 0, "Description cannot be empty");
+        require(_deadline > block.timestamp, "Deadline must be in the future");
         
         // Use _creator if provided (for bot), otherwise msg.sender
         address creator = _creator != address(0) ? _creator : msg.sender;
@@ -142,10 +147,11 @@ contract BountyManagerV2 is Ownable, ReentrancyGuard {
             status: BountyStatus.Active,
             winner: address(0),
             createdAt: block.timestamp,
+            deadline: _deadline,
             responseCount: 0
         });
         
-        emit BountyCreated(bountyId, creator, _title, msg.value, _severity);
+        emit BountyCreated(bountyId, creator, _title, msg.value, _severity, _deadline);
         
         return bountyId;
     }
@@ -164,6 +170,7 @@ contract BountyManagerV2 is Ownable, ReentrancyGuard {
         
         require(bounty.id != 0, "Bounty does not exist");
         require(bounty.status == BountyStatus.Active, "Bounty not active");
+        require(block.timestamp <= bounty.deadline, "Bounty deadline has passed");
         require(bytes(_description).length > 0, "Description cannot be empty");
         require(msg.sender != bounty.creator, "Creator cannot submit response");
         
@@ -235,6 +242,10 @@ contract BountyManagerV2 is Ownable, ReentrancyGuard {
         require(bounty.id != 0, "Bounty does not exist");
         require(msg.sender == bounty.creator, "Only creator can cancel");
         require(bounty.status == BountyStatus.Active, "Bounty not active");
+        
+        // Allow cancellation either by creator anytime or by anyone after deadline
+        bool canCancel = msg.sender == bounty.creator || block.timestamp > bounty.deadline;
+        require(canCancel, "Cannot cancel yet");
         
         uint256 refund = bounty.reward;
         bounty.status = BountyStatus.Cancelled;

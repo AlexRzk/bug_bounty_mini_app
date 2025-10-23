@@ -5,7 +5,8 @@ import type { Abi } from "viem";
 export const bountyManagerAbi: Abi = abiJson as unknown as Abi;
 export type BountyManagerAbi = Abi;
 
+// BountyManagerV2 deployed on Base Mainnet with deadline functionality
 export const BOUNTY_MANAGER_CONTRACT = {
-  address: "0x2b532aB49A441ECDd99A4AB8b02fF33c19997209" as `0x${string}`,
+  address: "0x5D8DFAe5422090722897FB2CfB5bE2A967f20Ce8" as `0x${string}`,
   abi: bountyManagerAbi,
 } as const;

@@ -33,10 +33,12 @@ contract BountyManagerV2Test is Test {
     function testCreateBounty() public {
         vm.startPrank(creator);
         
+        uint256 deadline = block.timestamp + 7 days;
         uint256 bountyId = bountyManager.createBounty{value: REWARD_AMOUNT}(
             "Fix login bug",
             "Users can't log in after update",
             BountyManagerV2.Severity.High,
+            deadline,
             address(0) // creator = msg.sender
         );
 
@@ -52,6 +54,7 @@ contract BountyManagerV2Test is Test {
             BountyManagerV2.BountyStatus status,
             ,
             ,
+            uint256 bountyDeadline,
             
         ) = bountyManager.bounties(bountyId);
 
@@ -59,6 +62,7 @@ contract BountyManagerV2Test is Test {
         assertEq(bountyCreator, creator);
         assertEq(title, "Fix login bug");
         assertEq(reward, REWARD_AMOUNT);
+        assertEq(bountyDeadline, deadline);
         assertTrue(status == BountyManagerV2.BountyStatus.Active);
 
         vm.stopPrank();
@@ -67,10 +71,12 @@ contract BountyManagerV2Test is Test {
     function testSubmitResponse() public {
         // Create bounty
         vm.prank(creator);
+        uint256 deadline = block.timestamp + 7 days;
         uint256 bountyId = bountyManager.createBounty{value: REWARD_AMOUNT}(
             "Bug Hunt",
             "Find bugs",
             BountyManagerV2.Severity.Medium,
+            deadline,
             address(0)
         );
 
@@ -105,10 +111,12 @@ contract BountyManagerV2Test is Test {
     function testCompleteBounty() public {
         // Create bounty
         vm.prank(creator);
+        uint256 deadline = block.timestamp + 7 days;
         uint256 bountyId = bountyManager.createBounty{value: REWARD_AMOUNT}(
             "Bug Hunt",
             "Find bugs",
             BountyManagerV2.Severity.High,
+            deadline,
             address(0)
         );
 
@@ -134,7 +142,7 @@ contract BountyManagerV2Test is Test {
         assertEq(feeCollector.balance, initialFeeBalance + expectedFee);
 
         // Check bounty status
-        (,,,,,, BountyManagerV2.BountyStatus status, address winner,,) = bountyManager.bounties(bountyId);
+        (,,,,,, BountyManagerV2.BountyStatus status, address winner,,,) = bountyManager.bounties(bountyId);
         assertTrue(status == BountyManagerV2.BountyStatus.Completed);
         assertEq(winner, responder);
     }
@@ -142,10 +150,12 @@ contract BountyManagerV2Test is Test {
     function testCancelBounty() public {
         // Create bounty
         vm.startPrank(creator);
+        uint256 deadline = block.timestamp + 7 days;
         uint256 bountyId = bountyManager.createBounty{value: REWARD_AMOUNT}(
             "Bug Hunt",
             "Find bugs",
             BountyManagerV2.Severity.Low,
+            deadline,
             address(0)
         );
 
@@ -158,7 +168,7 @@ contract BountyManagerV2Test is Test {
         assertEq(creator.balance, initialBalance + REWARD_AMOUNT);
 
         // Check status
-        (,,,,,, BountyManagerV2.BountyStatus status,,,) = bountyManager.bounties(bountyId);
+        (,,,,,, BountyManagerV2.BountyStatus status,,,,) = bountyManager.bounties(bountyId);
         assertTrue(status == BountyManagerV2.BountyStatus.Cancelled);
 
         vm.stopPrank();
@@ -167,10 +177,12 @@ contract BountyManagerV2Test is Test {
     function testCannotSubmitResponseToOwnBounty() public {
         // Create bounty
         vm.prank(creator);
+        uint256 deadline = block.timestamp + 7 days;
         uint256 bountyId = bountyManager.createBounty{value: REWARD_AMOUNT}(
             "Bug Hunt",
             "Find bugs",
             BountyManagerV2.Severity.Medium,
+            deadline,
             address(0)
         );
 
@@ -183,10 +195,12 @@ contract BountyManagerV2Test is Test {
     function testOnlyCreatorCanComplete() public {
         // Create bounty
         vm.prank(creator);
+        uint256 deadline = block.timestamp + 7 days;
         uint256 bountyId = bountyManager.createBounty{value: REWARD_AMOUNT}(
             "Bug Hunt",
             "Find bugs",
             BountyManagerV2.Severity.High,
+            deadline,
             address(0)
         );
 
@@ -203,9 +217,10 @@ contract BountyManagerV2Test is Test {
     function testGetBounties() public {
         // Create multiple bounties
         vm.startPrank(creator);
-        bountyManager.createBounty{value: 0.1 ether}("Bug 1", "Desc 1", BountyManagerV2.Severity.Low, address(0));
-        bountyManager.createBounty{value: 0.2 ether}("Bug 2", "Desc 2", BountyManagerV2.Severity.Medium, address(0));
-        bountyManager.createBounty{value: 0.3 ether}("Bug 3", "Desc 3", BountyManagerV2.Severity.High, address(0));
+        uint256 deadline = block.timestamp + 7 days;
+        bountyManager.createBounty{value: 0.1 ether}("Bug 1", "Desc 1", BountyManagerV2.Severity.Low, deadline, address(0));
+        bountyManager.createBounty{value: 0.2 ether}("Bug 2", "Desc 2", BountyManagerV2.Severity.Medium, deadline, address(0));
+        bountyManager.createBounty{value: 0.3 ether}("Bug 3", "Desc 3", BountyManagerV2.Severity.High, deadline, address(0));
         vm.stopPrank();
 
         uint256[] memory bounties = bountyManager.getBounties(0, 10);
@@ -219,7 +234,8 @@ contract BountyManagerV2Test is Test {
         assertEq(bountyManager.totalBounties(), 0);
 
         vm.prank(creator);
-        bountyManager.createBounty{value: REWARD_AMOUNT}("Bug", "Desc", BountyManagerV2.Severity.Medium, address(0));
+        uint256 deadline = block.timestamp + 7 days;
+        bountyManager.createBounty{value: REWARD_AMOUNT}("Bug", "Desc", BountyManagerV2.Severity.Medium, deadline, address(0));
 
         assertEq(bountyManager.totalBounties(), 1);
     }
@@ -244,5 +260,38 @@ contract BountyManagerV2Test is Test {
         vm.prank(owner);
         vm.expectRevert("Fee too high (max 10%)");
         bountyManager.setPlatformFee(1001); // 10.01%
+    }
+
+    function testCannotCreateBountyWithPastDeadline() public {
+        vm.prank(creator);
+        vm.expectRevert("Deadline must be in the future");
+        bountyManager.createBounty{value: REWARD_AMOUNT}(
+            "Bug",
+            "Desc",
+            BountyManagerV2.Severity.Medium,
+            block.timestamp - 1, // Past deadline
+            address(0)
+        );
+    }
+
+    function testCannotSubmitResponseAfterDeadline() public {
+        // Create bounty with short deadline
+        vm.prank(creator);
+        uint256 deadline = block.timestamp + 1 hours;
+        uint256 bountyId = bountyManager.createBounty{value: REWARD_AMOUNT}(
+            "Bug",
+            "Desc",
+            BountyManagerV2.Severity.Medium,
+            deadline,
+            address(0)
+        );
+
+        // Move time past deadline
+        vm.warp(deadline + 1);
+
+        // Try to submit response
+        vm.prank(responder);
+        vm.expectRevert("Bounty deadline has passed");
+        bountyManager.submitResponse(bountyId, "Too late");
     }
 }
