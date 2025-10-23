@@ -202,10 +202,10 @@ export function SubmitBountyDialog() {
                   <SelectValue placeholder="Select severity" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="critical">Critical</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="3">Critical</SelectItem>
+                  <SelectItem value="2">High</SelectItem>
+                  <SelectItem value="1">Medium</SelectItem>
+                  <SelectItem value="0">Low</SelectItem>
                 </SelectContent>
               </Select>
             </div>
