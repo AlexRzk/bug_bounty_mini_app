@@ -381,44 +381,25 @@ export function BountyBoardMagic() {
     functionName: "nextBountyId",
   })
 
-  // Read individual bounties (up to 10)
-  const maxBounties = nextBountyId ? Math.min(Number(nextBountyId) - 1, 10) : 0
+  // Calculate how many bounties exist (fetch up to 50)
+  const totalBounties = nextBountyId ? Number(nextBountyId) - 1 : 0
+  const maxBounties = Math.min(totalBounties, 50)
   
-  const bounty1 = useReadContract({
-    ...BOUNTY_MANAGER_CONTRACT,
-    functionName: "getBounty",
-    args: [1n],
-    query: { enabled: maxBounties >= 1 },
-  })
-  const bounty2 = useReadContract({
-    ...BOUNTY_MANAGER_CONTRACT,
-    functionName: "getBounty",
-    args: [2n],
-    query: { enabled: maxBounties >= 2 },
-  })
-  const bounty3 = useReadContract({
-    ...BOUNTY_MANAGER_CONTRACT,
-    functionName: "getBounty",
-    args: [3n],
-    query: { enabled: maxBounties >= 3 },
-  })
-  const bounty4 = useReadContract({
-    ...BOUNTY_MANAGER_CONTRACT,
-    functionName: "getBounty",
-    args: [4n],
-    query: { enabled: maxBounties >= 4 },
-  })
-  const bounty5 = useReadContract({
-    ...BOUNTY_MANAGER_CONTRACT,
-    functionName: "getBounty",
-    args: [5n],
-    query: { enabled: maxBounties >= 5 },
-  })
+  // Dynamically create array of bounty IDs to fetch
+  const bountyIds = Array.from({ length: maxBounties }, (_, i) => i + 1)
+  
+  // Fetch all bounties dynamically
+  const bountyQueries = bountyIds.map(id => 
+    useReadContract({
+      ...BOUNTY_MANAGER_CONTRACT,
+      functionName: "getBounty",
+      args: [BigInt(id)],
+      query: { enabled: totalBounties >= id },
+    })
+  )
 
   // Transform contract data to UI format
-  const bountyData = [bounty1, bounty2, bounty3, bounty4, bounty5]
-  
-  const bounties: BountyCardData[] = bountyData
+  const bounties: BountyCardData[] = bountyQueries
     .map((query, index) => {
       if (!query.data) return null
       
