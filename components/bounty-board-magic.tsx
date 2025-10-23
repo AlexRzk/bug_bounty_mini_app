@@ -40,19 +40,19 @@ const BOUNTY_MANAGER_CONTRACT = {
       type: "function"
     },
     {
-      inputs: [{ name: "_bountyId", type: "uint256" }],
-      name: "getBounty",
+      inputs: [{ name: "", type: "uint256" }],
+      name: "bounties",
       outputs: [
+        { name: "id", type: "uint256" },
         { name: "creator", type: "address" },
         { name: "title", type: "string" },
         { name: "description", type: "string" },
         { name: "reward", type: "uint256" },
-        { name: "paymentType", type: "uint8" },
-        { name: "tokenAddress", type: "address" },
+        { name: "severity", type: "uint8" },
         { name: "status", type: "uint8" },
         { name: "winner", type: "address" },
-        { name: "deadline", type: "uint256" },
-        { name: "farcasterCastHash", type: "string" }
+        { name: "createdAt", type: "uint256" },
+        { name: "responseCount", type: "uint256" }
       ],
       stateMutability: "view",
       type: "function"
@@ -392,7 +392,7 @@ export function BountyBoardMagic() {
   const bountyQueries = bountyIds.map(id => 
     useReadContract({
       ...BOUNTY_MANAGER_CONTRACT,
-      functionName: "getBounty",
+      functionName: "bounties",
       args: [BigInt(id)],
       query: { enabled: totalBounties >= id },
     })
@@ -403,7 +403,7 @@ export function BountyBoardMagic() {
     .map((query, index) => {
       if (!query.data) return null
       
-      const [creator, title, description, reward, paymentType, , status, , deadline] = query.data
+      const [id, creator, title, description, reward, severity, status, winner, createdAt, responseCount] = query.data
       
       // Skip cancelled bounties (status === 2)
       if (Number(status) === 2) return null
@@ -414,23 +414,27 @@ export function BountyBoardMagic() {
         1: "completed",
       }
       
-      // Determine severity based on reward amount
+      // Map severity enum to display string
+      const severityMap: Record<number, string> = {
+        0: "low",
+        1: "medium", 
+        2: "high",
+        3: "critical"
+      }
+      
       const rewardValue = Number(formatEther(reward))
-      let severity = "low"
-      if (rewardValue >= 0.1) severity = "critical"
-      else if (rewardValue >= 0.01) severity = "high"
       
       return {
-        id: (index + 1).toString(),
+        id: id.toString(),
         title: title || "Untitled Bounty",
         description: description || "No description provided",
-        reward: `${formatEther(reward)} ${paymentType === 0 ? 'ETH' : 'ERC20'}`,
+        reward: `${formatEther(reward)} ETH`,
         rewardValue,
-        severity,
+        severity: severityMap[Number(severity)] || "low",
         status: statusMap[Number(status)] || "open",
         creator: creator?.slice(0, 6) + "..." + creator?.slice(-4),
-        deadline: new Date(Number(deadline) * 1000).toLocaleDateString(),
-        deadlineTs: Number(deadline) * 1000,
+        deadline: new Date(Number(createdAt) * 1000).toLocaleDateString(),
+        deadlineTs: Number(createdAt) * 1000,
       }
     })
     .filter((bounty): bounty is BountyCardData => bounty !== null)

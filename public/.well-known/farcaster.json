@@ -6,7 +6,7 @@
   },
   "miniapp": {
     "version": "1",
-    "name": "Buggy Bounty",
+    "name": "Bug Bounty Hunter",
     "iconUrl": "https://bug-bounty-mini-app-swib.vercel.app/app-icon.png",
     "homeUrl": "https://bug-bounty-mini-app-swib.vercel.app",
     "splashImageUrl": "https://bug-bounty-mini-app-swib.vercel.app/app-icon.png",
