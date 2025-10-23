@@ -3,7 +3,7 @@
 import { Shield, AlertCircle } from "lucide-react"
 import { FarcasterWalletButton } from "@/components/farcaster-wallet-button"
 import { useAccount, useSwitchChain } from "wagmi"
-import { baseSepolia } from "wagmi/chains"
+import { base } from "wagmi/chains"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useEffect, useState } from "react"
@@ -18,7 +18,7 @@ export function Header() {
     setMounted(true)
   }, [])
 
-  const isCorrectNetwork = chain?.id === baseSepolia.id
+  const isCorrectNetwork = chain?.id === base.id
 
   return (
     <header className="border-b border-border bg-card">
@@ -37,11 +37,11 @@ export function Header() {
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => switchChain?.({ chainId: baseSepolia.id })}
+              onClick={() => switchChain?.({ chainId: base.id })}
               className="gap-2"
             >
               <AlertCircle className="h-4 w-4" />
-              Switch Network
+              Switch to Base
             </Button>
           )}
           <FarcasterWalletButton />

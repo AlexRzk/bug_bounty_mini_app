@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from "wagmi"
 import { parseEther } from "viem"
-import { baseSepolia } from "wagmi/chains"
+import { base } from "wagmi/chains"
 import {
   Dialog,
   DialogContent,
@@ -85,14 +85,14 @@ export function SubmitBountyDialog() {
     }
 
     // Check if on the correct chain
-    if (chain?.id !== baseSepolia.id) {
+    if (chain?.id !== base.id) {
       toast({
         title: "Wrong network",
-        description: "Switching to Base Sepolia...",
+        description: "Switching to Base mainnet...",
       })
       
       try {
-        await switchChain?.({ chainId: baseSepolia.id })
+        await switchChain?.({ chainId: base.id })
       } catch (err) {
         toast({
           title: "Network switch failed",
