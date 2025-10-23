@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { useReadContract } from "wagmi"
+import { usePublicClient, useReadContract } from "wagmi"
 import { formatEther } from "viem"
 import { useRouter } from "next/navigation"
 import { gsap } from 'gsap'
@@ -375,6 +375,10 @@ export function BountyBoardMagic() {
   const [sortBy, setSortBy] = useState<string>("reward")
   const [sortOpen, setSortOpen] = useState<boolean>(false)
   const sortMenuRef = useRef<HTMLDivElement | null>(null)
+  const publicClient = usePublicClient()
+  const [bountyData, setBountyData] = useState<BountyCardData[]>([])
+  const [isFetchingBounties, setIsFetchingBounties] = useState<boolean>(false)
+  const [fetchError, setFetchError] = useState<string | null>(null)
 
   // Read the total number of bounties from the contract
   const { data: nextBountyId, isLoading } = useReadContract({
@@ -386,67 +390,126 @@ export function BountyBoardMagic() {
   const totalBounties = nextBountyId ? Number(nextBountyId) - 1 : 0
   const maxBounties = Math.min(totalBounties, 50)
   
-  // Dynamically create array of bounty IDs to fetch
-  const bountyIds = Array.from({ length: maxBounties }, (_, i) => i + 1)
-  
-  // Fetch all bounties dynamically
-  const bountyQueries = bountyIds.map(id => 
-    useReadContract({
-      ...BOUNTY_MANAGER_CONTRACT,
-      functionName: "bounties",
-      args: [BigInt(id)],
-      query: { enabled: totalBounties >= id },
-    })
-  )
+  // Fetch bounty details when counts change
+  useEffect(() => {
+    let isCancelled = false
 
-  // Transform contract data to UI format
-  const bounties: BountyCardData[] = bountyQueries
-    .map((query, index) => {
-      if (!query.data) return null
-      
-      const [id, creator, title, description, reward, severity, status, winner, createdAt, responseCount] = query.data
-      
-      // Skip cancelled bounties (status === 2)
-      if (Number(status) === 2) return null
-      
-      // Map contract status enum to UI status
-      const statusMap: Record<number, string> = {
-        0: "open",
-        1: "completed",
+    const loadBounties = async () => {
+      if (!publicClient || maxBounties <= 0) {
+        setBountyData([])
+        return
       }
-      
-      // Map severity enum to display string
-      const severityMap: Record<number, string> = {
-        0: "low",
-        1: "medium", 
-        2: "high",
-        3: "critical"
-      }
-      
-      const rewardValue = Number(formatEther(reward))
-      
-      return {
-        id: id.toString(),
-        title: title || "Untitled Bounty",
-        description: description || "No description provided",
-        reward: `${formatEther(reward)} ETH`,
-        rewardValue,
-        severity: severityMap[Number(severity)] || "low",
-        status: statusMap[Number(status)] || "open",
-        creator: creator?.slice(0, 6) + "..." + creator?.slice(-4),
-        deadline: new Date(Number(createdAt) * 1000).toLocaleDateString(),
-        deadlineTs: Number(createdAt) * 1000,
-      }
-    })
-    .filter((bounty): bounty is BountyCardData => bounty !== null)
 
-  const filteredBounties = bounties.filter((bounty) => {
+      const bountyIds = Array.from({ length: maxBounties }, (_, i) => i + 1)
+      setIsFetchingBounties(true)
+      setFetchError(null)
+
+      try {
+        const results = await Promise.all(
+          bountyIds.map(id =>
+            publicClient.readContract({
+              ...BOUNTY_MANAGER_CONTRACT,
+              functionName: "bounties",
+              args: [BigInt(id)],
+            })
+          )
+        )
+
+        if (isCancelled) return
+
+        const statusMap: Record<number, string> = {
+          0: "open",
+          1: "completed",
+          2: "cancelled",
+        }
+
+        const severityMap: Record<number, string> = {
+          0: "low",
+          1: "medium",
+          2: "high",
+          3: "critical",
+        }
+
+        const mappedBounties = results
+          .map((result) => {
+            if (!result) return null
+
+            const [
+              id,
+              creator,
+              title,
+              description,
+              reward,
+              severity,
+              status,
+              winner,
+              createdAt,
+              deadline,
+              responseCount,
+            ] = result as unknown as [
+              bigint,
+              `0x${string}`,
+              string,
+              string,
+              bigint,
+              number,
+              number,
+              `0x${string}`,
+              bigint,
+              bigint,
+              bigint,
+            ]
+
+            // Skip cancelled bounties
+            if (Number(status) === 2) return null
+
+            const rewardValue = Number(formatEther(reward))
+
+            return {
+              id: id.toString(),
+              title: title || "Untitled Bounty",
+              description: description || "No description provided",
+              reward: `${formatEther(reward)} ETH`,
+              rewardValue,
+              severity: severityMap[Number(severity)] || "low",
+              status: statusMap[Number(status)] || "open",
+              creator: creator?.slice(0, 6) + "..." + creator?.slice(-4),
+              deadline: new Date(Number(deadline) * 1000).toLocaleDateString(),
+              deadlineTs: Number(deadline) * 1000,
+            }
+          })
+          .filter((bounty): bounty is BountyCardData => bounty !== null)
+
+        setBountyData(mappedBounties)
+      } catch (err) {
+        console.error("Failed to load bounties", err)
+        if (!isCancelled) {
+          setFetchError(err instanceof Error ? err.message : "Failed to load bounties")
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsFetchingBounties(false)
+        }
+      }
+    }
+
+    loadBounties()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [publicClient, maxBounties])
+
+  const filteredBounties = bountyData.filter((bounty) => {
     if (filter === "all") return true
     if (filter === "critical") return bounty.severity === "critical"
     if (filter === "high") return bounty.severity === "high"
     if (filter === "low") return bounty.severity === "low"
     return true
   })
+
+  const isBountyListLoading = isLoading || isFetchingBounties
+  const activeBountyCount = filteredBounties.length
 
   const getSeverityColor = (severity: string) => {
     // Returns background color (always dark gray now)
@@ -561,7 +624,11 @@ export function BountyBoardMagic() {
             Active Bug Bounties
           </h2>
           <p className="text-pretty mt-2 text-sm font-medium subtitle-muted">
-            {isLoading ? "Loading bounties..." : `${filteredBounties.length} active ${filteredBounties.length === 1 ? 'bounty' : 'bounties'} available`}
+            {isBountyListLoading
+              ? "Loading bounties..."
+              : fetchError
+                ? "Failed to load bounties. Please try again."
+                : `${activeBountyCount} active ${activeBountyCount === 1 ? 'bounty' : 'bounties'} available`}
           </p>
         </div>
         <SubmitBountyDialog />
@@ -615,9 +682,13 @@ export function BountyBoardMagic() {
       <GlobalSpotlight gridRef={gridRef} />
 
       <div className="bounty-magic-grid bento-section" ref={gridRef}>
-        {isLoading ? (
+        {isBountyListLoading ? (
           <div className="col-span-full text-center py-12 text-muted-foreground">
             Loading bounties...
+          </div>
+        ) : fetchError ? (
+          <div className="col-span-full text-center py-12 text-muted-foreground">
+            {fetchError}
           </div>
         ) : filteredBounties.length === 0 ? (
           <div className="col-span-full text-center py-12 text-muted-foreground">
