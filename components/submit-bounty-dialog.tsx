@@ -32,9 +32,7 @@ export function SubmitBountyDialog() {
     title: "",
     description: "",
     reward: "",
-    severity: "",
-    deadline: "",
-    farcasterCastHash: "",
+    severity: "0", // 0=Low, 1=Medium, 2=High, 3=Critical
   })
 
   // Wait for transaction confirmation
@@ -54,9 +52,7 @@ export function SubmitBountyDialog() {
         title: "",
         description: "",
         reward: "",
-        severity: "",
-        deadline: "",
-        farcasterCastHash: "",
+        severity: "0",
       })
     }
   }, [isSuccess, toast])
@@ -103,7 +99,7 @@ export function SubmitBountyDialog() {
       }
     }
 
-    if (!formData.title.trim() || !formData.description.trim() || !formData.reward) {
+    if (!formData.title.trim() || !formData.description.trim() || !formData.reward || !formData.severity) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields.",
@@ -123,63 +119,15 @@ export function SubmitBountyDialog() {
       return
     }
 
-    // Validate deadline
-    if (!formData.deadline) {
-      toast({
-        title: "Invalid deadline",
-        description: "Please select a deadline date.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Calculate deadline timestamp.
-    // The UI uses a date input (YYYY-MM-DD). Set deadline to end-of-day local time.
-    let deadlineTimestamp: bigint
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-    if (dateRegex.test(formData.deadline)) {
-      const [year, month, day] = formData.deadline.split('-').map(Number)
-      // Create date at end of day (23:59:59) in local timezone
-      const selected = new Date(year, month - 1, day, 23, 59, 59)
-      if (isNaN(selected.getTime())) {
-        toast({
-          title: "Invalid date format",
-          description: "Please enter a valid deadline date.",
-          variant: "destructive",
-        })
-        return
-      }
-      
-      // Check if deadline is in the past
-      const now = new Date()
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      const selectedDate = new Date(year, month - 1, day)
-      
-      if (selectedDate < today) {
-        toast({
-          title: "Invalid deadline",
-          description: "The deadline must be today or in the future.",
-          variant: "destructive",
-        })
-        return
-      }
-      
-      // Convert milliseconds to seconds for Unix timestamp
-      deadlineTimestamp = BigInt(Math.floor(selected.getTime() / 1000))
-    } else {
-      const daysFromNow = parseInt(formData.deadline) || 7
-      deadlineTimestamp = BigInt(Math.floor(Date.now() / 1000) + daysFromNow * 86400)
-    }
-
     try {
       writeContract({
         ...BOUNTY_MANAGER_CONTRACT,
-        functionName: 'createBountyETH',
+        functionName: 'createBounty',
         args: [
           formData.title,
           formData.description,
-          deadlineTimestamp,
-          formData.farcasterCastHash || "",
+          Number(formData.severity), // 0=Low, 1=Medium, 2=High, 3=Critical
+          "0x0000000000000000000000000000000000000000", // _creator (0x0 means use msg.sender)
         ],
         value: parseEther(formData.reward),
       })
@@ -257,19 +205,6 @@ export function SubmitBountyDialog() {
                 required
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="deadline">Deadline</Label>
-            <Input
-              id="deadline"
-              type="date"
-              value={formData.deadline}
-              onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-              min={new Date().toISOString().split('T')[0]}
-              required
-            />
-            <p className="text-xs text-muted-foreground">Select today or any future date</p>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
