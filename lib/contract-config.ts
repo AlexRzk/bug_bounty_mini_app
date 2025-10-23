@@ -1,4 +1,4 @@
-import abiJson from "./bounty-manager-abi.json";
+import abiJson from "./bounty-manager-v2-abi.json";
 import type { Abi } from "viem";
 
 // Provide a small, stable ABI type instead of exporting a huge literal type.
