@@ -30,7 +30,7 @@ interface BountyCardData {
 }
 
 const BOUNTY_MANAGER_CONTRACT = {
-  address: '0x2b532aB49A441ECDd99A4AB8b02fF33c19997209' as const,
+  address: '0x5D8DFAe5422090722897FB2CfB5bE2A967f20Ce8' as const,
   abi: [
     {
       inputs: [],
@@ -52,6 +52,7 @@ const BOUNTY_MANAGER_CONTRACT = {
         { name: "status", type: "uint8" },
         { name: "winner", type: "address" },
         { name: "createdAt", type: "uint256" },
+        { name: "deadline", type: "uint256" },
         { name: "responseCount", type: "uint256" }
       ],
       stateMutability: "view",

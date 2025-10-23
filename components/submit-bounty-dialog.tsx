@@ -33,6 +33,7 @@ export function SubmitBountyDialog() {
     description: "",
     reward: "",
     severity: "0", // 0=Low, 1=Medium, 2=High, 3=Critical
+    deadline: "7", // Days from now
   })
 
   // Wait for transaction confirmation
@@ -53,6 +54,7 @@ export function SubmitBountyDialog() {
         description: "",
         reward: "",
         severity: "0",
+        deadline: "7",
       })
     }
   }, [isSuccess, toast])
@@ -99,7 +101,7 @@ export function SubmitBountyDialog() {
       }
     }
 
-    if (!formData.title.trim() || !formData.description.trim() || !formData.reward || !formData.severity) {
+    if (!formData.title.trim() || !formData.description.trim() || !formData.reward || !formData.severity || !formData.deadline) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields.",
@@ -120,6 +122,9 @@ export function SubmitBountyDialog() {
     }
 
     try {
+      // Calculate deadline timestamp (days from now)
+      const deadlineSeconds = Math.floor(Date.now() / 1000) + (Number(formData.deadline) * 24 * 60 * 60)
+      
       writeContract({
         ...BOUNTY_MANAGER_CONTRACT,
         functionName: 'createBounty',
@@ -127,6 +132,7 @@ export function SubmitBountyDialog() {
           formData.title,
           formData.description,
           Number(formData.severity), // 0=Low, 1=Medium, 2=High, 3=Critical
+          deadlineSeconds, // deadline as unix timestamp
           "0x0000000000000000000000000000000000000000", // _creator (0x0 means use msg.sender)
         ],
         value: parseEther(formData.reward),
@@ -205,6 +211,20 @@ export function SubmitBountyDialog() {
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="deadline">Deadline (Days from now)</Label>
+            <Input
+              id="deadline"
+              type="number"
+              min="1"
+              max="365"
+              value={formData.deadline}
+              onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+              required
+            />
+            <p className="text-xs text-muted-foreground">Researchers will have this many days to submit solutions</p>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
