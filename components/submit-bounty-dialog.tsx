@@ -121,9 +121,20 @@ export function SubmitBountyDialog() {
       return
     }
 
+    // Validate deadline
+    const deadlineDays = parseInt(formData.deadline, 10)
+    if (isNaN(deadlineDays) || deadlineDays < 1 || deadlineDays > 365) {
+      toast({
+        title: "Invalid deadline",
+        description: "Please enter a deadline between 1 and 365 days.",
+        variant: "destructive",
+      })
+      return
+    }
+
     try {
       // Calculate deadline timestamp (days from now)
-      const deadlineSeconds = Math.floor(Date.now() / 1000) + (Number(formData.deadline) * 24 * 60 * 60)
+      const deadlineSeconds = Math.floor(Date.now() / 1000) + (deadlineDays * 24 * 60 * 60)
       
       writeContract({
         ...BOUNTY_MANAGER_CONTRACT,

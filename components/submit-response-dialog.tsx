@@ -105,21 +105,19 @@ export function SubmitResponseDialog({ bountyId }: SubmitResponseDialogProps) {
       return
     }
 
-    console.log("Submitting report:", { bountyId, report: formData.report, evidenceUrl: formData.evidenceUrl })
+    console.log("Submitting response:", { bountyId, description: formData.report })
 
     try {
       writeContract({
         ...BOUNTY_MANAGER_CONTRACT,
-        functionName: 'submitReport',
+        functionName: 'submitResponse',
         args: [
           BigInt(bountyId), 
-          formData.report, 
-          formData.evidenceUrl || "", 
-          "" // farcasterUsername - empty for now
+          formData.report, // description
         ],
       })
     } catch (err) {
-      console.error("Error submitting report:", err)
+      console.error("Error submitting response:", err)
       toast({
         title: "Submission failed",
         description: "An error occurred. Check console for details.",
