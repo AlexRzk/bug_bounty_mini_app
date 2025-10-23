@@ -108,7 +108,7 @@ export const minikitConfig: MinikitConfig = {
 
   // Contract configuration for frame interactions
   contract: {
-    address: process.env.NEXT_PUBLIC_BOUNTY_CONTRACT || '0x5Eb412b6FcB13225C3d5C2aE39570D86a894C11a',
+    address: process.env.NEXT_PUBLIC_BOUNTY_CONTRACT || '0x2b532aB49A441ECDd99A4AB8b02fF33c19997209',
     chainId: 8453, // Base mainnet chain ID
   },
 

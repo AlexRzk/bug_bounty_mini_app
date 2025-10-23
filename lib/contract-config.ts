@@ -6,6 +6,6 @@ export const bountyManagerAbi: Abi = abiJson as unknown as Abi;
 export type BountyManagerAbi = Abi;
 
 export const BOUNTY_MANAGER_CONTRACT = {
-  address: "0x5Eb412b6FcB13225C3d5C2aE39570D86a894C11a" as `0x${string}`,
+  address: "0x2b532aB49A441ECDd99A4AB8b02fF33c19997209" as `0x${string}`,
   abi: bountyManagerAbi,
 } as const;
