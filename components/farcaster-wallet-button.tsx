@@ -33,25 +33,19 @@ export function FarcasterWalletButton() {
 
   const handleConnect = async () => {
     if (isInFarcaster) {
-      // Use MiniKit's wallet connection for Farcaster
+      // In Farcaster Mini Apps, use the standard injected connector
+      // The Farcaster app provides an Ethereum provider automatically
       try {
-        console.log("Requesting Farcaster wallet connection...")
-        
-        // Request wallet address from Farcaster
-        const result = await sdk.actions.connectWallet()
-        console.log("Farcaster wallet result:", result)
-        
-        if (result?.address) {
-          console.log("Connected to Farcaster wallet:", result.address)
-          // The wallet should now be connected through wagmi
+        console.log("Connecting wallet in Farcaster context...")
+        const injectedConnector = connectors.find((c) => c.id === "injected")
+        if (injectedConnector) {
+          await connect({ connector: injectedConnector })
+          console.log("Connected to wallet in Farcaster")
+        } else {
+          console.error("No injected connector found")
         }
       } catch (error) {
         console.error("Farcaster wallet connection failed:", error)
-        // Fallback to injected connector
-        const injectedConnector = connectors.find((c) => c.id === "injected")
-        if (injectedConnector) {
-          connect({ connector: injectedConnector })
-        }
       }
     } else {
       // Use standard wallet connection for non-Farcaster
