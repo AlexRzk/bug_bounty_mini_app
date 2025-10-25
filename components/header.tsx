@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertCircle, Info, Trophy } from "lucide-react"
+import { AlertCircle, Info, Trophy, Menu, X } from "lucide-react"
 import { FarcasterWalletButton } from "@/components/farcaster-wallet-button"
 import { useAccount, useSwitchChain } from "wagmi"
 import { base, baseSepolia } from "wagmi/chains"
@@ -10,6 +10,7 @@ import Link from "next/link"
 import Image from "next/image"
 import GradientText from "@/components/GradientText"
 import styled from 'styled-components'
+import { isMiniAppContext } from "@/lib/miniapp-detection"
 
 // Use Sepolia for testing, mainnet for production
 const IS_TESTNET = process.env.NEXT_PUBLIC_USE_TESTNET === "true"
@@ -65,13 +66,83 @@ export function Header() {
   const { chain, isConnected } = useAccount()
   const { switchChain } = useSwitchChain()
   const [mounted, setMounted] = useState(false)
+  const [isMiniApp, setIsMiniApp] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   
   useEffect(() => {
     setMounted(true)
+    setIsMiniApp(isMiniAppContext())
   }, [])
 
   const isCorrectNetwork = chain?.id === TARGET_CHAIN.id
 
+  // Compact header for mini-app
+  if (isMiniApp) {
+    return (
+      <header className="bg-card sticky top-0 z-50">
+        <div className="flex items-center justify-between px-3 py-2">
+          <Link href="/" className="flex items-center gap-2">
+            <Image 
+              src="/topleftlogo.png" 
+              alt="Logo" 
+              width={32} 
+              height={32}
+              className="object-contain"
+            />
+            <span className="text-sm font-bold">Bug Bounty</span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <FarcasterWalletButton />
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              aria-label="Menu"
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+        {menuOpen && (
+          <div className="border-t border-border bg-card/95 backdrop-blur">
+            <div className="px-3 py-2 space-y-1">
+              <Link
+                href="/about"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                onClick={() => setMenuOpen(false)}
+              >
+                <Info className="h-4 w-4" />
+                <span className="text-sm">About</span>
+              </Link>
+              <Link
+                href="/leaderboard"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                onClick={() => setMenuOpen(false)}
+              >
+                <Trophy className="h-4 w-4" />
+                <span className="text-sm">Leaderboard</span>
+              </Link>
+              {mounted && isConnected && !isCorrectNetwork && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    switchChain?.({ chainId: TARGET_CHAIN.id })
+                    setMenuOpen(false)
+                  }}
+                  className="w-full gap-2"
+                >
+                  <AlertCircle className="h-4 w-4" />
+                  Switch to {TARGET_CHAIN.name}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+      </header>
+    )
+  }
+
+  // Full header for web
   return (
     <header className="bg-card">
       <div className="container mx-auto flex items-center justify-between px-4 py-4">
