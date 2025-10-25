@@ -33,7 +33,14 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       {/* Show header in web mode, hide in Mini App mode for cleaner UI */}
       {!isMiniApp && <Header />}
-      <main className="container mx-auto px-4 py-8">
+      <main className={`container mx-auto px-4 ${isMiniApp ? 'py-4' : 'py-8'}`}>
+        {/* Add compact header for mini-app mode */}
+        {isMiniApp && (
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold">Bug Bounty Hunt</h1>
+            <p className="text-sm text-muted-foreground">Secure, Fast, Rewarding</p>
+          </div>
+        )}
         <BountyBoardMagic />
       </main>
     </div>

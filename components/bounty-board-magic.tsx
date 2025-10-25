@@ -11,6 +11,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { VscListFilter, VscWarning, VscFlame, VscCircleLarge, VscArrowDown } from 'react-icons/vsc'
 import ElectricBorder from "@/components/ElectricBorder"
 import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"
+import { isMiniAppContext } from "@/lib/miniapp-detection"
 import './bounty-board-magic.css'
 
 const DEFAULT_PARTICLE_COUNT = 12
@@ -350,6 +351,12 @@ export function BountyBoardMagic() {
   const [isFetchingBounties, setIsFetchingBounties] = useState<boolean>(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [boostedBounties, setBoostedBounties] = useState<Set<string>>(new Set())
+  const [isMiniApp, setIsMiniApp] = useState(false)
+
+  // Detect mini-app context
+  useEffect(() => {
+    setIsMiniApp(isMiniAppContext())
+  }, [])
 
   // Read the total number of bounties from the contract
   const { data: nextBountyId, isLoading } = useReadContract({
@@ -604,21 +611,32 @@ export function BountyBoardMagic() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-balance text-4xl font-extrabold tracking-tight title-gradient">
-            Active Bug Bounties
-          </h2>
-          <p className="text-pretty mt-2 text-sm font-medium subtitle-muted">
-            {isBountyListLoading
-              ? "Loading bounties..."
-              : fetchError
-                ? "Failed to load bounties. Please try again."
-                : `${activeBountyCount} active ${activeBountyCount === 1 ? 'bounty' : 'bounties'} available`}
-          </p>
+      {!isMiniApp && (
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-balance text-4xl font-extrabold tracking-tight title-gradient">
+              Active Bug Bounties
+            </h2>
+            <p className="text-pretty mt-2 text-sm font-medium subtitle-muted">
+              {isBountyListLoading
+                ? "Loading bounties..."
+                : fetchError
+                  ? "Failed to load bounties. Please try again."
+                  : `${activeBountyCount} active ${activeBountyCount === 1 ? 'bounty' : 'bounties'} available`}
+            </p>
+          </div>
+          <SubmitBountyDialog />
         </div>
-        <SubmitBountyDialog />
-      </div>
+      )}
+
+      {isMiniApp && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {activeBountyCount} active {activeBountyCount === 1 ? 'bounty' : 'bounties'}
+          </p>
+          <SubmitBountyDialog />
+        </div>
+      )}
 
       <div className="dock-wrapper flex justify-center my-6">
         <Dock 
