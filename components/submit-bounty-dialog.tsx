@@ -48,10 +48,12 @@ export function SubmitBountyDialog() {
 
   const setMaxReward = () => {
     if (balanceData) {
-      // Reserve a small amount for gas (0.001 ETH)
-      const maxAmount = balanceData.value > parseEther("0.001") 
-        ? formatEther(balanceData.value - parseEther("0.001"))
-        : "0"
+      // Reserve a tiny amount for gas (0.0001 ETH, ~$0.25 at current prices)
+      // This allows users with small balances to still use max button
+      const gasReserve = parseEther("0.0001")
+      const maxAmount = balanceData.value > gasReserve
+        ? formatEther(balanceData.value - gasReserve)
+        : formatEther(balanceData.value) // Use full balance if very small
       setFormData({ ...formData, reward: maxAmount })
     }
   }
