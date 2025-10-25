@@ -8,13 +8,33 @@
 
 /**
  * Check if current URL suggests Mini App context (client-side)
- * Uses query parameter detection as recommended in the docs
+ * Detects Farcaster frame/embed context using multiple signals
  */
 export function isMiniAppContext(): boolean {
   if (typeof window === 'undefined') return false
   
+  // Check for explicit miniApp parameter
   const params = new URLSearchParams(window.location.search)
-  return params.has('miniApp') && params.get('miniApp') === 'true'
+  if (params.has('miniApp') && params.get('miniApp') === 'true') {
+    return true
+  }
+  
+  // Check if we're in an iframe (Farcaster embeds pages in iframes)
+  if (window.self !== window.top) {
+    return true
+  }
+  
+  // Check for Farcaster-specific referrer
+  if (document.referrer.includes('farcaster.xyz') || document.referrer.includes('warpcast.com')) {
+    return true
+  }
+  
+  // Check viewport width (Farcaster frames are typically narrow)
+  if (window.innerWidth < 500) {
+    return true
+  }
+  
+  return false
 }
 
 /**
