@@ -73,7 +73,7 @@ export function Header() {
   const isCorrectNetwork = chain?.id === TARGET_CHAIN.id
 
   return (
-    <header className="border-b border-border bg-card">
+    <header className="bg-card">
       <div className="container mx-auto flex items-center justify-between px-4 py-4">
         <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <Image 
