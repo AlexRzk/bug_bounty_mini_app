@@ -92,7 +92,7 @@ export function Header() {
             <span className="text-sm font-bold">Bug Bounty</span>
           </Link>
           <div className="flex items-center gap-2">
-            <FarcasterWalletButton />
+            <FarcasterWalletButton compact />
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="p-2 hover:bg-muted rounded-lg transition-colors"

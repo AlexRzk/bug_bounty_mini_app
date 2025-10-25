@@ -73,7 +73,7 @@ const StyledButton = styled.button`
   }
 `
 
-export function FarcasterWalletButton() {
+export function FarcasterWalletButton({ compact = false }: { compact?: boolean }) {
   const { address, isConnected } = useAccount()
   const { connect, connectors } = useConnect()
   const { disconnect } = useDisconnect()
@@ -127,13 +127,13 @@ export function FarcasterWalletButton() {
 
   if (!mounted) {
     return (
-      <StyledButton disabled>
+      <StyledButton disabled style={{ minWidth: compact ? '48px' : '140px' }}>
         <span className="button-content">
           <svg className="sparkle" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" fill="#FFFFFF" width={18} height={18}>
             <path clipRule="evenodd" d="M12 14a3 3 0 0 1 3-3h4a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-4a3 3 0 0 1-3-3Zm3-1a1 1 0 1 0 0 2h4v-2h-4Z" fillRule="evenodd" />
             <path clipRule="evenodd" d="M12.293 3.293a1 1 0 0 1 1.414 0L16.414 6h-2.828l-1.293-1.293a1 1 0 0 1 0-1.414ZM12.414 6 9.707 3.293a1 1 0 0 0-1.414 0L5.586 6h6.828ZM4.586 7l-.056.055A2 2 0 0 0 3 9v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2h-4a5 5 0 0 1 0-10h4a2 2 0 0 0-1.53-1.945L17.414 7H4.586Z" fillRule="evenodd" />
           </svg>
-          <span className="text">Loading...</span>
+          {!compact && <span className="text">Loading...</span>}
         </span>
       </StyledButton>
     )
@@ -146,35 +146,37 @@ export function FarcasterWalletButton() {
 
     return (
       <div className="flex items-center gap-2">
-        <StyledButton disabled title={basename ?? address}>
+        <StyledButton disabled title={basename ?? address} style={{ minWidth: compact ? '48px' : '140px' }}>
           <span className="button-content">
             <svg className="sparkle" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" fill="#FFFFFF" width={18} height={18}>
               <path clipRule="evenodd" d="M12 14a3 3 0 0 1 3-3h4a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-4a3 3 0 0 1-3-3Zm3-1a1 1 0 1 0 0 2h4v-2h-4Z" fillRule="evenodd" />
               <path clipRule="evenodd" d="M12.293 3.293a1 1 0 0 1 1.414 0L16.414 6h-2.828l-1.293-1.293a1 1 0 0 1 0-1.414ZM12.414 6 9.707 3.293a1 1 0 0 0-1.414 0L5.586 6h6.828ZM4.586 7l-.056.055A2 2 0 0 0 3 9v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2h-4a5 5 0 0 1 0-10h4a2 2 0 0 0-1.53-1.945L17.414 7H4.586Z" fillRule="evenodd" />
             </svg>
-            <span className="text">{label}</span>
+            {!compact && <span className="text">{label}</span>}
           </span>
         </StyledButton>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => disconnect()}
-          title="Disconnect"
-        >
-          <LogOut className="h-4 w-4" />
-        </Button>
+        {!compact && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => disconnect()}
+            title="Disconnect"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     )
   }
 
   return (
-    <StyledButton onClick={handleConnect}>
+    <StyledButton onClick={handleConnect} style={{ minWidth: compact ? '48px' : '140px' }}>
       <span className="button-content">
         <svg className="sparkle" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" fill="#FFFFFF" width={18} height={18}>
           <path clipRule="evenodd" d="M12 14a3 3 0 0 1 3-3h4a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-4a3 3 0 0 1-3-3Zm3-1a1 1 0 1 0 0 2h4v-2h-4Z" fillRule="evenodd" />
           <path clipRule="evenodd" d="M12.293 3.293a1 1 0 0 1 1.414 0L16.414 6h-2.828l-1.293-1.293a1 1 0 0 1 0-1.414ZM12.414 6 9.707 3.293a1 1 0 0 0-1.414 0L5.586 6h6.828ZM4.586 7l-.056.055A2 2 0 0 0 3 9v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2h-4a5 5 0 0 1 0-10h4a2 2 0 0 0-1.53-1.945L17.414 7H4.586Z" fillRule="evenodd" />
         </svg>
-        <span className="text">{isInFarcaster ? "Connect Farcaster Wallet" : "Connect"}</span>
+        {!compact && <span className="text">{isInFarcaster ? "Connect Farcaster Wallet" : "Connect"}</span>}
       </span>
     </StyledButton>
   )
