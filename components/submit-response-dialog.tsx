@@ -108,12 +108,18 @@ export function SubmitResponseDialog({ bountyId }: SubmitResponseDialogProps) {
     console.log("Submitting response:", { bountyId, description: formData.report })
 
     try {
+      // Combine report and evidenceUrl into description
+      let fullDescription = formData.report
+      if (formData.evidenceUrl.trim()) {
+        fullDescription += `\n\n---\n🔗 Evidence/Resolution Link:\n${formData.evidenceUrl.trim()}`
+      }
+
       writeContract({
         ...BOUNTY_MANAGER_CONTRACT,
         functionName: 'submitResponse',
         args: [
           BigInt(bountyId), 
-          formData.report, // description
+          fullDescription, // description with embedded URL
         ],
       })
     } catch (err) {

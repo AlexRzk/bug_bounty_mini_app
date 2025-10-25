@@ -205,13 +205,23 @@
   background: rgba(16, 185, 129, 0.2);
   border-color: rgba(16, 185, 129, 0.5);
 }
+.bounty-card__label.status-locked {
+  background: rgba(251, 146, 60, 0.2);
+  border-color: rgba(251, 146, 60, 0.5);
+}
 .bounty-card__label.status-in-progress {
   background: rgba(245, 158, 11, 0.2);
   border-color: rgba(245, 158, 11, 0.5);
 }
 .bounty-card__label.status-completed {
   background: rgba(59, 130, 246, 0.2);
-  border-color: rgba(132, 0, 255, 0.3);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #60A5FA;
+}
+.bounty-card__label.status-disputed {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #F87171;
 }
 
 /* Responsive Design */
@@ -254,4 +264,19 @@
     transition: none !important;
     animation: none !important;
   }
+}
+
+/* Electric Border Wrapper Styling */
+.electric-border {
+  width: 100%;
+  height: 100%;
+}
+
+.electric-border .eb-content {
+  height: 100%;
+}
+
+.electric-border .bounty-magic-card {
+  height: 100%;
+  margin: 0;
 }

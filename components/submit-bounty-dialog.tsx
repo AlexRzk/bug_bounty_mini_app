@@ -1,9 +1,9 @@
 "use client"
 
 import React, { useState } from "react"
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from "wagmi"
-import { parseEther } from "viem"
-import { base } from "wagmi/chains"
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain, useBalance } from "wagmi"
+import { parseEther, formatEther } from "viem"
+import { base, baseSepolia } from "wagmi/chains"
 import {
   Dialog,
   DialogContent,
@@ -22,8 +22,12 @@ import { useToast } from "@/hooks/use-toast"
 import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"
 import "@/components/glowing-button.css"
 
+// Use the correct chain based on environment
+const IS_TESTNET = process.env.NEXT_PUBLIC_USE_TESTNET === "true"
+const TARGET_CHAIN = IS_TESTNET ? baseSepolia : base
+
 export function SubmitBountyDialog() {
-  const { isConnected, chain } = useAccount()
+  const { isConnected, chain, address } = useAccount()
   const { toast } = useToast()
   const { writeContract, data: hash, error, isPending } = useWriteContract()
   const { switchChain } = useSwitchChain()
@@ -35,6 +39,22 @@ export function SubmitBountyDialog() {
     severity: "0", // 0=Low, 1=Medium, 2=High, 3=Critical
     deadline: "7", // Days from now
   })
+
+  // Get user's ETH balance for the correct chain
+  const { data: balanceData } = useBalance({
+    address: address,
+    chainId: TARGET_CHAIN.id,
+  })
+
+  const setMaxReward = () => {
+    if (balanceData) {
+      // Reserve a small amount for gas (0.001 ETH)
+      const maxAmount = balanceData.value > parseEther("0.001") 
+        ? formatEther(balanceData.value - parseEther("0.001"))
+        : "0"
+      setFormData({ ...formData, reward: maxAmount })
+    }
+  }
 
   // Wait for transaction confirmation
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
@@ -83,18 +103,18 @@ export function SubmitBountyDialog() {
     }
 
     // Check if on the correct chain
-    if (chain?.id !== base.id) {
+    if (chain?.id !== TARGET_CHAIN.id) {
       toast({
         title: "Wrong network",
-        description: "Switching to Base mainnet...",
+        description: `Switching to ${TARGET_CHAIN.name}...`,
       })
       
       try {
-        await switchChain?.({ chainId: base.id })
+        await switchChain?.({ chainId: TARGET_CHAIN.id })
       } catch (err) {
         toast({
           title: "Network switch failed",
-          description: "Please manually switch to Base Sepolia in your wallet.",
+          description: `Please manually switch to ${TARGET_CHAIN.name} in your wallet.`,
           variant: "destructive",
         })
         return
@@ -212,15 +232,32 @@ export function SubmitBountyDialog() {
 
             <div className="space-y-2">
               <Label htmlFor="reward">Reward (ETH)</Label>
-              <Input
-                id="reward"
-                type="number"
-                step="0.01"
-                placeholder="e.g., 2.5"
-                value={formData.reward}
-                onChange={(e) => setFormData({ ...formData, reward: e.target.value })}
-                required
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="reward"
+                  type="number"
+                  step="0.001"
+                  placeholder="e.g., 2.5"
+                  value={formData.reward}
+                  onChange={(e) => setFormData({ ...formData, reward: e.target.value })}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={setMaxReward}
+                  disabled={!balanceData}
+                  className="whitespace-nowrap"
+                >
+                  Max
+                </Button>
+              </div>
+              {balanceData && (
+                <p className="text-xs text-muted-foreground">
+                  Balance: {parseFloat(formatEther(balanceData.value)).toFixed(4)} ETH
+                </p>
+              )}
             </div>
           </div>
 

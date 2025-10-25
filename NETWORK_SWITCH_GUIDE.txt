@@ -1,0 +1,497 @@
+===================================================================================
+NETWORK SWITCHING GUIDE: Base Sepolia Testnet ↔ Base Mainnet
+===================================================================================
+
+This guide shows ALL the changes needed to switch between testnet and mainnet.
+
+===================================================================================
+STEP 1: Environment Variable (.env.local)
+===================================================================================
+
+FILE: .env.local (root directory)
+
+FOR TESTNET (Sepolia):
+----------------------
+NEXT_PUBLIC_USE_TESTNET=true
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=b954d12db2eaf5783a48e8d7502aa36f
+
+FOR MAINNET (Base):
+-------------------
+NEXT_PUBLIC_USE_TESTNET=false
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=b954d12db2eaf5783a48e8d7502aa36f
+
+⚠️ IMPORTANT: Restart dev server after changing this file!
+Command: npm run dev
+
+===================================================================================
+STEP 2: Contract Configuration (lib/contract-config.ts)
+===================================================================================
+
+FILE: lib/contract-config.ts
+
+CHANGES NEEDED:
+---------------
+1. Import both chain types:
+   import { base, baseSepolia } from "wagmi/chains"
+
+2. Update contract addresses:
+
+   FOR TESTNET:
+   export const BOUNTY_MANAGER_V3_CONTRACT = {
+     address: "0x1e670cfad5Ce4810A9b644CAf88f73f90a38De83" as `0x${string}`,  // Sepolia V3
+     abi: bountyManagerAbiV3,
+   } as const;
+
+   FOR MAINNET:
+   export const BOUNTY_MANAGER_V3_CONTRACT = {
+     address: "0x3165e828EB446b69DeB1Ebbc074539C57Cb49958" as `0x${string}`,  // Base Mainnet V3 (deployed & verified)
+     abi: bountyManagerAbiV3,
+   } as const;
+
+3. Set default contract:
+   export const BOUNTY_MANAGER_CONTRACT = BOUNTY_MANAGER_V3_CONTRACT;
+
+⚠️ NOTE: V2 mainnet address: 0x5D8DFAe5422090722897FB2CfB5bE2A967f20Ce8
+⚠️ NOTE: V3 Sepolia address: 0x1e670cfad5Ce4810A9b644CAf88f73f90a38De83
+⚠️ NOTE: V3 Mainnet address: 0x3165e828EB446b69DeB1Ebbc074539C57Cb49958
+
+===================================================================================
+STEP 3: Wagmi Configuration (lib/wagmi-config.ts)
+===================================================================================
+
+FILE: lib/wagmi-config.ts
+
+CHANGES NEEDED:
+---------------
+Lines 1-25:
+
+import { http, createConfig } from "wagmi"
+import { base, baseSepolia } from "wagmi/chains"
+import { injected, walletConnect } from "wagmi/connectors"
+
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "b954d12db2eaf5783a48e8d7502aa36f"
+
+// Use Sepolia for testing V3, Base mainnet for production
+const IS_TESTNET = process.env.NEXT_PUBLIC_USE_TESTNET === "true"
+
+export const config = createConfig({
+  chains: IS_TESTNET ? [baseSepolia] : [base],  // Only ONE chain to avoid conflicts
+  connectors: [
+    injected({ shimDisconnect: true }),
+    walletConnect({
+      projectId,
+      metadata: {
+        name: "Bug Bounty Hunter",
+        description: "Secure bug bounty platform on Base blockchain",
+        url: "https://bug-bounty-mini-app-swib.vercel.app",
+        icons: ["https://bug-bounty-mini-app-swib.vercel.app/app-icon.png"],
+      },
+      showQrModal: true,
+    }),
+  ],
+  transports: {
+    [base.id]: http(),
+    [baseSepolia.id]: http(),
+  },
+  ssr: false,
+})
+
+⚠️ KEY POINT: chains array must have ONLY the active chain to prevent wallet confusion!
+
+===================================================================================
+STEP 4: Header Component (components/header.tsx)
+===================================================================================
+
+FILE: components/header.tsx
+
+CHANGES NEEDED:
+---------------
+Lines 1-15:
+
+import { AlertCircle, Info, Trophy } from "lucide-react"
+import { FarcasterWalletButton } from "@/components/farcaster-wallet-button"
+import { useAccount, useSwitchChain } from "wagmi"
+import { base, baseSepolia } from "wagmi/chains"
+import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import GradientText from "@/components/GradientText"
+import styled from 'styled-components'
+
+// Use Sepolia for testing, mainnet for production
+const IS_TESTNET = process.env.NEXT_PUBLIC_USE_TESTNET === "true"
+const TARGET_CHAIN = IS_TESTNET ? baseSepolia : base
+
+Lines 60-70:
+
+export function Header() {
+  const { chain, isConnected } = useAccount()
+  const { switchChain } = useSwitchChain()
+  const [mounted, setMounted] = useState(false)
+  
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const isCorrectNetwork = chain?.id === TARGET_CHAIN.id
+
+Lines 105-115 (Network switch button):
+
+{mounted && isConnected && !isCorrectNetwork && (
+  <Button
+    variant="destructive"
+    size="sm"
+    onClick={() => switchChain?.({ chainId: TARGET_CHAIN.id })}
+    className="gap-2"
+  >
+    <AlertCircle className="h-4 w-4" />
+    Switch to {TARGET_CHAIN.name}
+  </Button>
+)}
+
+RESULT: Button text changes dynamically:
+- Testnet: "Switch to Base Sepolia"
+- Mainnet: "Switch to Base"
+
+===================================================================================
+STEP 5: Submit Bounty Dialog (components/submit-bounty-dialog.tsx)
+===================================================================================
+
+FILE: components/submit-bounty-dialog.tsx
+
+CHANGES NEEDED:
+---------------
+Lines 1-25:
+
+import React, { useState } from "react"
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain, useBalance } from "wagmi"
+import { parseEther, formatEther } from "viem"
+import { base, baseSepolia } from "wagmi/chains"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Plus, Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"
+import "@/components/glowing-button.css"
+
+// Use the correct chain based on environment
+const IS_TESTNET = process.env.NEXT_PUBLIC_USE_TESTNET === "true"
+const TARGET_CHAIN = IS_TESTNET ? baseSepolia : base
+
+Lines 40-45 (Balance hook - FIXES MAX BUTTON):
+
+// Get user's ETH balance for the correct chain
+const { data: balanceData } = useBalance({
+  address: address,
+  chainId: TARGET_CHAIN.id,  // CHANGED FROM: chainId: base.id
+})
+
+Lines 106-120 (Network check):
+
+// Check if on the correct chain
+if (chain?.id !== TARGET_CHAIN.id) {
+  toast({
+    title: "Wrong network",
+    description: `Switching to ${TARGET_CHAIN.name}...`,
+  })
+  
+  try {
+    await switchChain?.({ chainId: TARGET_CHAIN.id })
+  } catch (err) {
+    toast({
+      title: "Network switch failed",
+      description: `Please manually switch to ${TARGET_CHAIN.name} in your wallet.`,
+      variant: "destructive",
+    })
+    return
+  }
+}
+
+⚠️ CRITICAL FIX: The MAX button reads balance from the correct chain now!
+
+===================================================================================
+STEP 6: Bounty Board (components/bounty-board-magic.tsx)
+===================================================================================
+
+FILE: components/bounty-board-magic.tsx
+
+CHANGES NEEDED:
+---------------
+Lines 1-15:
+
+'use client'
+
+import { useState, useRef, useEffect, useCallback } from "react"
+import { usePublicClient, useReadContract } from "wagmi"
+import { formatEther } from "viem"
+import { useRouter } from "next/navigation"
+import { gsap } from 'gsap'
+import { SubmitBountyDialog } from "@/components/submit-bounty-dialog"
+import Dock from "@/components/dock"
+import { AnimatePresence, motion } from 'framer-motion'
+import { VscListFilter, VscWarning, VscFlame, VscCircleLarge, VscArrowDown } from 'react-icons/vsc'
+import ElectricBorder from "@/components/ElectricBorder"
+import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"  // ADDED
+import './bounty-board-magic.css'
+
+Lines 30-70 (REMOVED hardcoded contract):
+
+BEFORE (WRONG):
+const BOUNTY_MANAGER_CONTRACT = {
+  address: '0x5D8DFAe5422090722897FB2CfB5bE2A967f20Ce8' as const,
+  abi: [...]
+}
+
+AFTER (CORRECT):
+// Contract is imported from lib/contract-config.ts
+// No hardcoded address here!
+
+⚠️ CRITICAL: This was causing old bounties to show on testnet!
+
+===================================================================================
+STEP 7: Basename Resolution (lib/basenames.ts)
+===================================================================================
+
+FILE: lib/basenames.ts
+
+CHANGES NEEDED:
+---------------
+Lines 1-25:
+
+import {
+  Address,
+  createPublicClient,
+  encodePacked,
+  http,
+  keccak256,
+  namehash,
+} from 'viem'
+import { base, baseSepolia } from 'viem/chains'
+import L2ResolverAbi from '@/abis/L2ResolverAbi'
+
+// Basenames only work on mainnet
+const IS_TESTNET = process.env.NEXT_PUBLIC_USE_TESTNET === "true"
+const BASENAME_CHAIN = IS_TESTNET ? baseSepolia : base
+
+const BASENAME_L2_RESOLVER_ADDRESS = '0xC6d566A56A1aFf6508b41f6c90ff131615583BCD' as Address
+
+const baseClient = createPublicClient({
+  chain: BASENAME_CHAIN,
+  transport: http(IS_TESTNET ? 'https://sepolia.base.org' : 'https://base.llamarpc.com', {
+    batch: false,
+    retryCount: 2,
+    retryDelay: 500,
+  }),
+})
+
+Lines 70-95 (getBasename function):
+
+export async function getBasename(address: Address): Promise<BaseName | undefined> {
+  // Basenames only exist on mainnet, not testnet
+  if (IS_TESTNET) {
+    return undefined
+  }
+  
+  try {
+    const addressReverseNode = convertReverseNodeToBytes(address, BASENAME_CHAIN.id)
+    const basename = await baseClient.readContract({
+      abi: L2ResolverAbi,
+      address: BASENAME_L2_RESOLVER_ADDRESS,
+      functionName: 'name',
+      args: [addressReverseNode],
+    })
+    
+    if (basename && basename.endsWith('.base.eth')) {
+      return basename as BaseName
+    }
+    
+    return undefined
+  } catch (error) {
+    console.error('Error resolving Basename:', error)
+    return undefined
+  }
+}
+
+⚠️ NOTE: Basenames only exist on mainnet, will show addresses on testnet
+
+===================================================================================
+STEP 8: Bounty Detail Component (components/bounty-detail.tsx)
+===================================================================================
+
+FILE: components/bounty-detail.tsx
+
+STATUS: Already configured correctly! Uses BOUNTY_MANAGER_CONTRACT from config.
+
+V3 Features (Lines 61-73):
+  
+  // V3 features - Dispute and compensation
+  const { data: canDispute } = useReadContract({
+    ...BOUNTY_MANAGER_CONTRACT,
+    functionName: 'canDisputeBounty',
+    args: [BigInt(bountyId)],
+  })
+
+  const { data: hasClaimedCompensation } = useReadContract({
+    ...BOUNTY_MANAGER_CONTRACT,
+    functionName: 'hasClaimedCompensation',
+    args: address ? [BigInt(bountyId), address] : undefined,
+  })
+
+✅ No changes needed here - it reads from BOUNTY_MANAGER_CONTRACT
+
+===================================================================================
+DEPLOYMENT CHECKLIST
+===================================================================================
+
+TESTNET TO MAINNET MIGRATION:
+------------------------------
+
+1. ✅ Test everything on Sepolia testnet first
+   - Create bounties
+   - Submit responses
+   - Verify lock mechanism works
+   - Test dispute flow
+   - Test compensation claims
+
+2. ✅ Deploy V3 contract to Base Mainnet:
+   
+   cd contracts
+   
+   # WSL command:
+   forge script script/DeployBountyManagerV3.s.sol:DeployBountyManagerV3 \
+     --rpc-url https://mainnet.base.org \
+     --broadcast \
+     --verify
+
+3. ✅ Update contract address in lib/contract-config.ts:
+   
+   export const BOUNTY_MANAGER_V3_CONTRACT = {
+     address: "0x3165e828EB446b69DeB1Ebbc074539C57Cb49958" as `0x${string}`,
+     abi: bountyManagerAbiV3,
+   } as const;
+
+4. ✅ Change environment variable in .env.local:
+   
+   NEXT_PUBLIC_USE_TESTNET=false
+
+5. ✅ Restart dev server:
+   
+   npm run dev
+
+6. ✅ Verify in browser:
+   - Wallet connects to Base Mainnet (Chain ID: 8453)
+   - Button says "Switch to Base" (not Sepolia)
+   - Balance shows mainnet ETH
+   - Basenames resolve properly
+   - Empty bounty board (fresh contract)
+
+MAINNET TO TESTNET (FOR TESTING):
+----------------------------------
+
+1. ✅ Change .env.local:
+   NEXT_PUBLIC_USE_TESTNET=true
+
+2. ✅ Update contract address in lib/contract-config.ts:
+   address: "0x1e670cfad5Ce4810A9b644CAf88f73f90a38De83" (Sepolia V3)
+
+3. ✅ Restart: npm run dev
+
+4. ✅ Get testnet ETH: https://www.coinbase.com/faucets/base-ethereum-goerli-faucet
+
+===================================================================================
+QUICK REFERENCE TABLE
+===================================================================================
+
+File                              | Variable/Line              | Testnet Value                              | Mainnet Value
+----------------------------------|----------------------------|--------------------------------------------|-----------------------------------------
+.env.local                        | NEXT_PUBLIC_USE_TESTNET    | true                                       | false
+lib/contract-config.ts            | V3 address                 | 0x1e670cfad5Ce4810A9b644CAf88f73f90a38De83 | 0x3165e828EB446b69DeB1Ebbc074539C57Cb49958
+lib/wagmi-config.ts               | chains array               | [baseSepolia]                              | [base]
+components/header.tsx             | TARGET_CHAIN               | baseSepolia                                | base
+components/submit-bounty-dialog.tsx| TARGET_CHAIN              | baseSepolia                                | base
+components/bounty-board-magic.tsx | Import                     | BOUNTY_MANAGER_CONTRACT from config        | BOUNTY_MANAGER_CONTRACT from config
+lib/basenames.ts                  | IS_TESTNET check           | Returns undefined (no basenames)           | Resolves basenames
+
+===================================================================================
+COMMON ISSUES & SOLUTIONS
+===================================================================================
+
+ISSUE: "Switch to Base" shows but I'm on testnet
+SOLUTION: Change NEXT_PUBLIC_USE_TESTNET=true in .env.local and restart server
+
+ISSUE: MAX button doesn't work
+SOLUTION: Check balanceData uses TARGET_CHAIN.id (not hardcoded base.id)
+
+ISSUE: Old bounties showing on testnet
+SOLUTION: Remove hardcoded contract address from bounty-board-magic.tsx
+
+ISSUE: Can't connect wallet to Sepolia
+SOLUTION: Check wagmi-config.ts chains array only has [baseSepolia]
+
+ISSUE: Basename not showing on testnet
+SOLUTION: Expected! Basenames only exist on mainnet (returns undefined on testnet)
+
+ISSUE: Wrong balance showing
+SOLUTION: Verify useBalance hook uses correct chainId: TARGET_CHAIN.id
+
+===================================================================================
+VERIFICATION COMMANDS
+===================================================================================
+
+Check which network you're on:
+------------------------------
+1. Open browser console (F12)
+2. Check wallet: Should show "Base Sepolia" or "Base"
+3. Check chain ID:
+   - Sepolia: 84532
+   - Mainnet: 8453
+
+Check contract balance:
+-----------------------
+# Sepolia V3:
+cast balance 0x1e670cfad5Ce4810A9b644CAf88f73f90a38De83 --rpc-url https://sepolia.base.org
+
+# Mainnet V2 (old):
+cast balance 0x5D8DFAe5422090722897FB2CfB5bE2A967f20Ce8 --rpc-url https://mainnet.base.org
+
+# Mainnet V3 (after deployment):
+cast balance YOUR_NEW_V3_ADDRESS --rpc-url https://mainnet.base.org
+
+View contract on explorer:
+--------------------------
+Sepolia: https://sepolia.basescan.org/address/0x1e670cfad5Ce4810A9b644CAf88f73f90a38De83
+Mainnet: https://basescan.org/address/YOUR_ADDRESS
+
+===================================================================================
+FINAL NOTES
+===================================================================================
+
+✅ All files now use environment-based configuration
+✅ Single source of truth: NEXT_PUBLIC_USE_TESTNET in .env.local
+✅ No more hardcoded addresses in components
+✅ Automatic network switching and error messages
+✅ MAX button works on both networks
+✅ Basename resolution disabled on testnet
+
+⚠️ ALWAYS test on Sepolia before deploying to mainnet!
+⚠️ NEVER commit .env.local to git (contains wallet keys)
+⚠️ ALWAYS verify contract address after deployment
+
+💰 V2 Mainnet funds are locked (no withdrawal function)
+🔒 V3 includes escrow protection (funds safe even if locked)
+
+===================================================================================
+END OF GUIDE
+===================================================================================

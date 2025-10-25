@@ -15,11 +15,11 @@ export const metadata: Metadata = {
   generator: "Next.js",
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon.ico", sizes: "any" }
+      { url: "/favicon.ico", type: "image/x-icon" },
+      { url: "/app-icon.png", sizes: "any" }
     ],
-    shortcut: "/favicon.svg",
-    apple: "/app-icon.svg",
+    shortcut: "/favicon.ico",
+    apple: "/app-icon.png",
   },
   openGraph: {
     title: "Buggy Bounty - Security Bug Bounty Platform",

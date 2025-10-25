@@ -3,10 +3,12 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { User, CheckCircle } from "lucide-react"
-import { useReadContract, useWriteContract, useAccount, usePublicClient } from "wagmi"
+import { User, CheckCircle, ExternalLink } from "lucide-react"
+import { useReadContract, useWriteContract, useAccount, usePublicClient, useWaitForTransactionReceipt } from "wagmi"
 import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 const statusColors = {
   pending: "bg-chart-2 text-foreground",
@@ -14,11 +16,19 @@ const statusColors = {
   rejected: "bg-muted text-muted-foreground",
 }
 
+// Helper to extract GitHub URLs from text
+function extractGitHubUrls(text: string): string[] {
+  const githubUrlPattern = /https?:\/\/(www\.)?github\.com\/[^\s)]+/gi
+  const matches = text.match(githubUrlPattern)
+  return matches ? [...new Set(matches)] : []
+}
+
 export function ResponseList({ bountyId }: { bountyId: string }) {
   const { address } = useAccount()
-  const { writeContract } = useWriteContract()
+  const { writeContract, data: hash } = useWriteContract()
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
   const publicClient = usePublicClient()
+  const { toast } = useToast()
   const [responses, setResponses] = useState<Array<readonly [
     bigint,
     bigint,
@@ -28,6 +38,22 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
     boolean
   ]>>([])
   const [responsesLoading, setResponsesLoading] = useState(false)
+
+  // Wait for transaction confirmation
+  const { isSuccess: isAcceptSuccess } = useWaitForTransactionReceipt({
+    hash,
+  })
+
+  // Show success toast when acceptance is confirmed
+  useEffect(() => {
+    if (isAcceptSuccess && hash) {
+      toast({
+        title: "✅ Response Accepted!",
+        description: "The bounty has been completed and payment sent to the winner.",
+      })
+      setAcceptingId(null)
+    }
+  }, [isAcceptSuccess, hash, toast])
 
   // Read bounty to get creator
   const { data: bountyData } = useReadContract({
@@ -51,6 +77,7 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
     )
   }
 
+  // V3 Bounty struct: [id, creator, title, description, reward, severity, status, feeCollector, totalFees, boostedAmount, lockedAt, selectionDeadline, selectedResponseId]
   const [
     ,
     creator,
@@ -60,20 +87,23 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
     ,
     statusEnum,
   ] = bountyData as readonly [
-    bigint,
-    `0x${string}`,
-    string,
-    string,
-    bigint,
-    number,
-    number,
-    `0x${string}`,
-    bigint,
-    bigint,
-    bigint,
+    bigint,           // 0: id
+    `0x${string}`,    // 1: creator
+    string,           // 2: title
+    string,           // 3: description
+    bigint,           // 4: reward
+    number,           // 5: severity
+    number,           // 6: status
+    `0x${string}`,    // 7: feeCollector
+    bigint,           // 8: totalFees
+    bigint,           // 9: boostedAmount
+    bigint,           // 10: lockedAt
+    bigint,           // 11: selectionDeadline
+    bigint,           // 12: selectedResponseId
   ]
   const isCreator = address?.toLowerCase() === creator.toLowerCase()
-  const isActive = Number(statusEnum) === 0
+  const isActive = Number(statusEnum) === 0 // Status 0 = Active, 1 = Locked (can still accept)
+  const canAccept = Number(statusEnum) === 0 || Number(statusEnum) === 1 // Active or Locked
 
   const submissionIdArray = submissionIds as readonly bigint[] | undefined
 
@@ -145,15 +175,23 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
   const handleAcceptSubmission = async (submissionId: bigint) => {
     if (!isCreator) return
     
+    console.log('=== ACCEPT SUBMISSION DEBUG ===')
+    console.log('Bounty ID:', bountyId)
+    console.log('Response ID:', submissionId.toString())
+    console.log('Contract:', BOUNTY_MANAGER_CONTRACT.address)
+    console.log('Creator:', creator)
+    console.log('Current User:', address)
+    
     setAcceptingId(submissionId.toString())
     try {
       await writeContract({
         ...BOUNTY_MANAGER_CONTRACT,
-        functionName: 'acceptSubmission',
-        args: [submissionId],
+        functionName: 'completeBounty',  // V3 uses completeBounty instead of acceptSubmission
+        args: [BigInt(bountyId), submissionId],  // V3 needs both bountyId and responseId
       })
+      console.log('✅ Transaction submitted')
     } catch (error) {
-      console.error('Failed to accept submission:', error)
+      console.error('❌ Failed to accept submission:', error)
     } finally {
       setAcceptingId(null)
     }
@@ -173,7 +211,7 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
             key={response[0].toString()}
             submission={response}
             isCreator={isCreator}
-            isActive={isActive}
+            canAccept={canAccept}
             onAccept={() => handleAcceptSubmission(response[0])}
             isAccepting={acceptingId === response[0].toString()}
           />
@@ -186,7 +224,7 @@ export function ResponseList({ bountyId }: { bountyId: string }) {
 function SubmissionCard({
   submission,
   isCreator,
-  isActive,
+  canAccept,
   onAccept,
   isAccepting,
 }: {
@@ -199,7 +237,7 @@ function SubmissionCard({
     boolean
   ]
   isCreator: boolean
-  isActive: boolean
+  canAccept: boolean
   onAccept: () => void
   isAccepting: boolean
 }) {
@@ -207,6 +245,9 @@ function SubmissionCard({
 
   const submittedDate = new Date(Number(submittedAt) * 1000).toLocaleDateString()
   const status = accepted ? 'accepted' : 'pending'
+  
+  // Extract GitHub URLs from description
+  const githubUrls = extractGitHubUrls(description)
 
   return (
     <Card>
@@ -230,8 +271,33 @@ function SubmissionCard({
           <h4 className="font-semibold mb-2">Report</h4>
           <p className="text-pretty text-foreground whitespace-pre-wrap">{description}</p>
         </div>
+        
+        {/* GitHub Resolution Links */}
+        {githubUrls.length > 0 && (
+          <div className="bg-muted/50 border border-border rounded-lg p-3">
+            <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+              <ExternalLink className="h-4 w-4" />
+              {accepted ? 'Resolution Links' : 'Referenced Links'}
+            </h4>
+            <div className="space-y-1">
+              {githubUrls.map((url, index) => (
+                <Link
+                  key={index}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 break-all"
+                >
+                  <span>🔗</span>
+                  <span>{url}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+        
         <div className="flex items-center justify-end gap-2">
-          {isCreator && !accepted && isActive && (
+          {isCreator && !accepted && canAccept && (
             <Button
               onClick={onAccept}
               disabled={isAccepting}

@@ -8,7 +8,9 @@ import { gsap } from 'gsap'
 import { SubmitBountyDialog } from "@/components/submit-bounty-dialog"
 import Dock from "@/components/dock"
 import { AnimatePresence, motion } from 'framer-motion'
-import { VscListFilter, VscWarning, VscFlame, VscInfo } from 'react-icons/vsc'
+import { VscListFilter, VscWarning, VscFlame, VscCircleLarge, VscArrowDown } from 'react-icons/vsc'
+import ElectricBorder from "@/components/ElectricBorder"
+import { BOUNTY_MANAGER_CONTRACT } from "@/lib/contract-config"
 import './bounty-board-magic.css'
 
 const DEFAULT_PARTICLE_COUNT = 12
@@ -27,38 +29,6 @@ interface BountyCardData {
   creator: string
   deadline: string
   deadlineTs: number
-}
-
-const BOUNTY_MANAGER_CONTRACT = {
-  address: '0x5D8DFAe5422090722897FB2CfB5bE2A967f20Ce8' as const,
-  abi: [
-    {
-      inputs: [],
-      name: "nextBountyId",
-      outputs: [{ type: "uint256" }],
-      stateMutability: "view",
-      type: "function"
-    },
-    {
-      inputs: [{ name: "", type: "uint256" }],
-      name: "bounties",
-      outputs: [
-        { name: "id", type: "uint256" },
-        { name: "creator", type: "address" },
-        { name: "title", type: "string" },
-        { name: "description", type: "string" },
-        { name: "reward", type: "uint256" },
-        { name: "severity", type: "uint8" },
-        { name: "status", type: "uint8" },
-        { name: "winner", type: "address" },
-        { name: "createdAt", type: "uint256" },
-        { name: "deadline", type: "uint256" },
-        { name: "responseCount", type: "uint256" }
-      ],
-      stateMutability: "view",
-      type: "function"
-    }
-  ] as const
 }
 
 const createParticleElement = (x: number, y: number, color: string = DEFAULT_GLOW_COLOR): HTMLDivElement => {
@@ -379,6 +349,7 @@ export function BountyBoardMagic() {
   const [bountyData, setBountyData] = useState<BountyCardData[]>([])
   const [isFetchingBounties, setIsFetchingBounties] = useState<boolean>(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [boostedBounties, setBoostedBounties] = useState<Set<string>>(new Set())
 
   // Read the total number of bounties from the contract
   const { data: nextBountyId, isLoading } = useReadContract({
@@ -417,10 +388,13 @@ export function BountyBoardMagic() {
 
         if (isCancelled) return
 
+        // V3 Status mapping: 0=Active, 1=Locked, 2=Completed, 3=Cancelled, 4=Disputed
         const statusMap: Record<number, string> = {
           0: "open",
-          1: "completed",
-          2: "cancelled",
+          1: "locked",
+          2: "completed",
+          3: "cancelled",
+          4: "disputed",
         }
 
         const severityMap: Record<number, string> = {
@@ -460,8 +434,8 @@ export function BountyBoardMagic() {
               bigint,
             ]
 
-            // Skip cancelled bounties
-            if (Number(status) === 2) return null
+            // Skip only cancelled bounties (keep completed, disputed, etc. visible)
+            if (Number(status) === 3) return null
 
             const rewardValue = Number(formatEther(reward))
 
@@ -557,16 +531,16 @@ export function BountyBoardMagic() {
       className: filter === 'high' ? 'dock-item-active' : ''
     },
     { 
-      icon: <VscInfo size={20} />, 
-      label: 'Low', 
-      onClick: () => setFilter('low'),
-      className: filter === 'low' ? 'dock-item-active' : ''
-    },
-    { 
-      icon: <VscWarning size={20} />, 
+      icon: <VscCircleLarge size={20} />, 
       label: 'Medium', 
       onClick: () => setFilter('medium'),
       className: filter === 'medium' ? 'dock-item-active' : ''
+    },
+    { 
+      icon: <VscArrowDown size={20} />, 
+      label: 'Low', 
+      onClick: () => setFilter('low'),
+      className: filter === 'low' ? 'dock-item-active' : ''
     },
     { 
       icon: <VscListFilter size={20} />, 
@@ -713,35 +687,123 @@ export function BountyBoardMagic() {
             No bounties found. Create the first one!
           </div>
         ) : (
-          sortedBounties.map((bounty) => (
-            <ParticleCard
-              key={bounty.id}
-              className={`bounty-magic-card severity-${bounty.severity}`}
-              onClick={() => router.push(`/bounty/${bounty.id}`)}
-            >
-              <div className="bounty-card__header">
-                <div 
-                  className={`bounty-card__label status-${bounty.status.replace(' ', '-')}`}
-                >
-                  {bounty.status.toUpperCase()}
+          sortedBounties.map((bounty) => {
+            const isBoosted = boostedBounties.has(bounty.id)
+            
+            const toggleBoost = (e: React.MouseEvent) => {
+              e.stopPropagation()
+              setBoostedBounties(prev => {
+                const newSet = new Set(prev)
+                if (newSet.has(bounty.id)) {
+                  newSet.delete(bounty.id)
+                } else {
+                  newSet.add(bounty.id)
+                }
+                return newSet
+              })
+            }
+
+            const cardContent = (
+              <ParticleCard
+                key={bounty.id}
+                className={`bounty-magic-card severity-${bounty.severity}`}
+                onClick={() => router.push(`/bounty/${bounty.id}`)}
+              >
+                <div className="bounty-card__header">
+                  <div 
+                    className={`bounty-card__label status-${bounty.status.replace(' ', '-')}`}
+                  >
+                    {bounty.status === 'completed' && '✅ '}
+                    {bounty.status === 'locked' && '🔒 '}
+                    {bounty.status === 'disputed' && '⚠️ '}
+                    {bounty.status.toUpperCase()}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div 
+                      className={`bounty-card__severity severity-${bounty.severity}`}
+                    >
+                      {bounty.severity.toUpperCase()}
+                    </div>
+                    {isBoosted && (
+                      <div 
+                        className="bounty-card__label"
+                        style={{ 
+                          background: 'linear-gradient(135deg, #00d4ff 0%, #0099ff 100%)',
+                          color: 'white'
+                        }}
+                      >
+                        ⚡ BOOSTED
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div 
-                  className={`bounty-card__severity severity-${bounty.severity}`}
-                >
-                  {bounty.severity.toUpperCase()}
+                <div className="bounty-card__content">
+                  <h2 className="bounty-card__title">{bounty.title}</h2>
+                  <p className="bounty-card__description">{bounty.description}</p>
+                  <div className="bounty-card__footer">
+                    <div className="bounty-card__reward">💰 {bounty.reward}</div>
+                    <div className="bounty-card__deadline">📅 {bounty.deadline}</div>
+                  </div>
+                  <div className="bounty-card__creator">👤 {bounty.creator}</div>
+                  
+                  {/* Boost Button */}
+                  <button
+                    onClick={toggleBoost}
+                    style={{
+                      marginTop: '12px',
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: isBoosted ? '2px solid #00d4ff' : '2px solid rgba(255,255,255,0.2)',
+                      background: isBoosted 
+                        ? 'linear-gradient(135deg, rgba(0,212,255,0.2) 0%, rgba(0,153,255,0.2) 100%)'
+                        : 'rgba(255,255,255,0.05)',
+                      color: isBoosted ? '#00d4ff' : 'rgba(255,255,255,0.7)',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <span style={{ fontSize: '16px' }}>⚡</span>
+                    {isBoosted ? 'Boosted!' : 'Boost Bounty'}
+                    <span style={{ fontSize: '11px', opacity: 0.7 }}>(Demo - Free)</span>
+                  </button>
+                  {!isBoosted && (
+                    <p style={{
+                      marginTop: '6px',
+                      fontSize: '11px',
+                      textAlign: 'center',
+                      color: 'rgba(255,255,255,0.5)'
+                    }}>
+                      ⚡ Test feature - Future updates will require ETH payment
+                    </p>
+                  )}
                 </div>
-              </div>
-              <div className="bounty-card__content">
-                <h2 className="bounty-card__title">{bounty.title}</h2>
-                <p className="bounty-card__description">{bounty.description}</p>
-                <div className="bounty-card__footer">
-                  <div className="bounty-card__reward">💰 {bounty.reward}</div>
-                  <div className="bounty-card__deadline">📅 {bounty.deadline}</div>
-                </div>
-                <div className="bounty-card__creator">👤 {bounty.creator}</div>
-              </div>
-            </ParticleCard>
-          ))
+              </ParticleCard>
+            )
+
+            return isBoosted ? (
+              <ElectricBorder
+                key={bounty.id}
+                color="#7df9ff"
+                speed={1.2}
+                chaos={0.5}
+                thickness={3}
+                style={{ 
+                  borderRadius: '16px',
+                  width: '100%',
+                  display: 'block'
+                }}
+              >
+                {cardContent}
+              </ElectricBorder>
+            ) : cardContent
+          })
         )}
       </div>
     </div>
