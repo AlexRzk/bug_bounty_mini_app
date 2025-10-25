@@ -31,8 +31,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Show header in web mode, hide in Mini App mode for cleaner UI */}
-      {!isMiniApp && <Header />}
+      {/* Always show header - it adapts based on mini-app context */}
+      <Header />
       <main className={`container mx-auto px-4 ${isMiniApp ? 'pt-2 pb-8' : 'py-8'}`}>
         <BountyBoardMagic />
       </main>
